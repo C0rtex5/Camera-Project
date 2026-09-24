@@ -1,0 +1,7 @@
+services:
+  sentinel:
+    environment:
+      SENTINEL_DETECTOR_WEIGHTS: /models/detector.pt
+      SENTINEL_GNN_CHECKPOINT: /models/forecast.pt
+    volumes:
+      - ./models:/models:ro
