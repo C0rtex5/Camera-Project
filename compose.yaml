@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     init: true
     ports:
-      - "127.0.0.1:8000:8000"
+      - "0.0.0.0:8000:8000"
     # Optional deployment overrides: docker compose --env-file .env.production -f compose.yaml up -d
     environment:
       SENTINEL_MODE: production
