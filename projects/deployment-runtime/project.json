@@ -90,7 +90,7 @@
       "name": "duplicate-instance audit (read-only)",
       "kind": "cli-tool",
       "path": "scripts/docker_instance_audit.py",
-      "contract": "Lists every container from the SentinelZone images with its supervisor, restart policy and published ports; exits 1 when two containers do the same job or contest one host port, and prints remediation without ever mutating anything.",
+      "contract": "Lists every container from the SentinelZone images with its supervisor, restart policy and published ports; exits 1 when two containers do the same job or contest one host port. Read-only throughout (docker ps/inspect, plus an optional scan of enabled systemd units and the current user's crontab to name what would recreate a removed duplicate); it prints remediation but never executes it.",
       "consumers": [
         "validation-harness"
       ]
@@ -149,7 +149,7 @@
     "The three smoke scripts each bootstrap and tear down their own disposable resources.",
     "No image bakes in camera credentials, SSH keys or private setup data.",
     "Exactly one container from this image is supervised on a host: a second compose project or docker run cannot silently coexist (pinned names).",
-    "scripts/docker_instance_audit.py reports OK on a healthy host, names the supervisor of every container, and never mutates anything.",
+    "scripts/docker_instance_audit.py reports OK on a healthy host, names the supervisor of every container, scans for the supervisor that would recreate a duplicate, and never mutates anything.",
     "scripts/docker_single_instance_fix.py is a dry run by default, clears restart policies before removal, leaves the --keep container untouched, and verifies the result by re-auditing."
   ],
   "build": {

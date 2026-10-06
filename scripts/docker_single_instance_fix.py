@@ -34,7 +34,16 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import docker_instance_audit as audit  # noqa: E402  (single source of truth for the inspection)
+try:
+    import docker_instance_audit as audit  # noqa: E402  (single source of truth for the inspection)
+except ImportError:  # pragma: no cover - delivery guard for a single-file copy
+    print(
+        "docker_instance_audit.py must sit next to this script: both files are stdlib-only and are\n"
+        "meant to be copied to the host together, for example:\n"
+        "  tar -C scripts -cf - docker_instance_audit.py docker_single_instance_fix.py | ssh host 'tar -C ~ -xf -'",
+        file=sys.stderr,
+    )
+    raise SystemExit(2)
 
 
 def docker(argv: list[str]) -> subprocess.CompletedProcess[str]:

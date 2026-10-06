@@ -10,6 +10,10 @@ questions:
    condition that makes two containers take turns owning port 8000 and look like
    one flapping deployment.
 
+When duplicates are found it also runs a read-only scan of enabled systemd units
+and the current user's crontab, because ``docker rm -f`` only sticks if nothing
+else recreates the container (``--no-host-scan`` disables that scan).
+
 Exit codes:
     0  exactly one supervised instance, no contested port
     1  duplicates found (two containers doing the same job, or one contested port)
@@ -74,6 +78,35 @@ class Instance:
 
 def docker(args: list[str], timeout: int = 30) -> subprocess.CompletedProcess[str]:
     return subprocess.run(["docker", *args], capture_output=True, text=True, timeout=timeout)
+
+
+def host_supervisors(pattern: str = "sentinel") -> list[str]:
+    """Best-effort, read-only scan for things that could restart a container.
+
+    ``docker rm -f`` only sticks if nothing else recreates the container. This
+    scan looks at the two supervisors that are visible without root: enabled
+    systemd units and the current user's crontab. It never modifies anything and
+    silently reports nothing when the tool is absent or unreadable (for example
+    when running unprivileged on a host whose units are visible only to root).
+    """
+    found: list[str] = []
+    probes = (
+        (["systemctl", "list-units", "--all", "--type=service", "--no-legend", "--no-pager"], "systemd unit"),
+        (["crontab", "-l"], "crontab entry"),
+    )
+    for argv, label in probes:
+        if shutil.which(argv[0]) is None:
+            continue
+        try:
+            result = subprocess.run(argv, capture_output=True, text=True, timeout=15)
+        except (OSError, subprocess.TimeoutExpired):
+            continue
+        if result.returncode != 0:
+            continue
+        for line in (result.stdout or "").splitlines():
+            if pattern in line.lower():
+                found.append(f"{label}: {line.strip()[:140]}")
+    return found
 
 
 def list_containers(image_filter: str) -> list[Instance]:
@@ -223,6 +256,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--image", default="sentinelzone-ai", help="image (or repository) to audit")
     parser.add_argument("--json", action="store_true", help="emit a JSON report instead of text")
+    parser.add_argument(
+        "--no-host-scan",
+        action="store_true",
+        help="skip the read-only systemd/crontab scan that looks for whatever recreates a duplicate",
+    )
     args = parser.parse_args()
 
     if shutil.which("docker") is None:
@@ -235,6 +273,7 @@ def main() -> int:
         return 2
 
     errors, warnings = audit(instances)
+    supervisors = [] if (args.no_host_scan or not errors) else host_supervisors()
     keep = min(
         (i for i in instances if i.running),
         key=lambda i: i.short_id,
@@ -263,6 +302,7 @@ def main() -> int:
                     ],
                     "errors": errors,
                     "warnings": warnings,
+                    "host_supervisors": supervisors,
                     "ok": not errors,
                 },
                 indent=2,
@@ -284,6 +324,14 @@ def main() -> int:
     for error in errors:
         print(f"ERROR {error}")
     if errors:
+        print()
+        print("Possible supervisors that would recreate a container (read-only scan):")
+        if supervisors:
+            for line in supervisors:
+                print(f"  {line}")
+        else:
+            print("  none found in systemd units or the current user's crontab")
+            print("  (check 'sudo crontab -l', other users' crontabs, and any CI job that runs docker run)")
         print()
         print("Keep one instance and remove the rest:")
         print(f"  # keep: {keep.short_id} ({keep.name})" if keep else "  # keep: none running")

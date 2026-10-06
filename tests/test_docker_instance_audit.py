@@ -88,17 +88,30 @@ def ps_row(entry: dict) -> dict:
 
 
 class AuditTests(unittest.TestCase):
-    def run_audit(self, containers: list[dict], *extra: str, path: str | None = None):
+    def run_audit(
+        self,
+        containers: list[dict],
+        *extra: str,
+        path: str | None = None,
+        binaries: dict[str, str] | None = None,
+        host_scan: bool = False,
+    ):
         with tempfile.TemporaryDirectory(prefix="sentinel-audit-") as tmp:
             root = Path(tmp)
             (root / "docker").write_text(STUB)
             (root / "docker").chmod((root / "docker").stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+            for name, source in (binaries or {}).items():
+                (root / name).write_text(source)
+                (root / name).chmod(0o755)
             (root / "ps.jsonl").write_text("".join(json.dumps(ps_row(c)) + "\n" for c in containers))
             (root / "inspect.json").write_text(json.dumps(containers))
             env = dict(os.environ)
             env["PATH"] = path if path is not None else f"{root}{os.pathsep}{env.get('PATH', '')}"
+            argv = [sys.executable, str(AUDIT), *extra]
+            if not host_scan:
+                argv.append("--no-host-scan")
             return subprocess.run(
-                [sys.executable, str(AUDIT), *extra],
+                argv,
                 capture_output=True,
                 text=True,
                 env=env,
@@ -165,6 +178,74 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout)
         self.assertIn("host port 0.0.0.0:8000 is claimed by 2 containers", result.stdout)
 
+    def test_host_scan_names_the_supervisor_that_would_recreate_a_duplicate(self):
+        """docker rm -f only sticks if nothing else recreates the container."""
+        systemctl = (
+            "#!/usr/bin/env python3\n"
+            "import sys\n"
+            "sys.stdout.write('  sentinelzone-edge.service loaded active running SentinelZone edge daemon\\n')\n"
+            "sys.stdout.write('  ssh.service loaded active running OpenBSD Secure Shell server\\n')\n"
+        )
+        crontab = (
+            "#!/usr/bin/env python3\n"
+            "import sys\n"
+            "sys.stdout.write('*/5 * * * * /opt/sentinelzone/start.sh\\n')\n"
+            "sys.stdout.write('0 3 * * * /usr/bin/backup.sh\\n')\n"
+        )
+        result = self.run_audit(
+            [
+                container("a" * 64, "sentinelzone", running=True, project="sentinelzone"),
+                container("b" * 64, "dup", running=False, restart="always"),
+            ],
+            binaries={"systemctl": systemctl, "crontab": crontab},
+            host_scan=True,
+        )
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("Possible supervisors that would recreate a container", result.stdout)
+        self.assertIn("systemd unit: sentinelzone-edge.service", result.stdout)
+        self.assertIn("crontab entry: */5 * * * * /opt/sentinelzone/start.sh", result.stdout)
+        # Unrelated units and cron jobs must not be reported.
+        self.assertNotIn("ssh.service", result.stdout)
+        self.assertNotIn("backup.sh", result.stdout)
+
+    def test_host_scan_reports_none_found_when_nothing_matches(self):
+        unrelated = "#!/usr/bin/env python3\nimport sys\nsys.stdout.write('  unrelated.service loaded active running x\\n')\n"
+        result = self.run_audit(
+            [
+                container("a" * 64, "sentinelzone", running=True, project="sentinelzone"),
+                container("b" * 64, "dup", running=False, restart="always"),
+            ],
+            binaries={"systemctl": unrelated, "crontab": unrelated},
+            host_scan=True,
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("none found in systemd units", result.stdout)
+
+    def test_host_scan_is_skipped_on_a_clean_host(self):
+        """A healthy host must not run extra host commands at all."""
+        probe = "#!/usr/bin/env python3\nimport pathlib,sys\npathlib.Path(__file__).with_name('ran.txt').write_text('yes')\n"
+        with tempfile.TemporaryDirectory(prefix="sentinel-audit-") as tmp:
+            root = Path(tmp)
+            (root / "docker").write_text(STUB)
+            (root / "docker").chmod(0o755)
+            for name in ("systemctl", "crontab"):
+                (root / name).write_text(probe)
+                (root / name).chmod(0o755)
+            only = container("a" * 64, "sentinelzone", running=True, project="sentinelzone")
+            (root / "ps.jsonl").write_text(json.dumps(ps_row(only)) + "\n")
+            (root / "inspect.json").write_text(json.dumps([only]))
+            env = dict(os.environ, PATH=f"{root}{os.pathsep}{os.environ.get('PATH', '')}")
+            result = subprocess.run(
+                [sys.executable, str(AUDIT)],
+                capture_output=True,
+                text=True,
+                env=env,
+                cwd=ROOT,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertFalse((root / "ran.txt").exists(), "a clean host must not be probed")
+            self.assertNotIn("Possible supervisors", result.stdout)
+
     def test_json_report_names_the_supervisor_of_each_container(self):
         result = self.run_audit(
             [
@@ -205,35 +286,57 @@ class AuditTests(unittest.TestCase):
         self.assertIn("No containers from this image exist", result.stdout)
         self.assertIn("docker compose up -d", result.stdout)
 
-    def test_audit_never_executes_a_mutating_docker_command(self):
+    def test_audit_never_executes_a_mutating_command(self):
         """Read-only guarantee, checked on the code that runs, not on the help text.
 
         The script prints remediation commands for the operator, so the *text*
-        contains `docker rm`; what must not exist is a call site. Every call to
-        the `docker(...)` helper must be `ps` or `inspect`.
+        contains `docker rm`; what must not exist is a mutating call site. Two
+        checks: every argv-shaped list literal in the module must be one of the
+        read-only probes, and every call of the `docker(...)` helper must use
+        `ps` or `inspect`.
         """
         import ast
 
         tree = ast.parse(AUDIT.read_text())
-        call_sites = []
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "docker":
-                if node.args and isinstance(node.args[0], ast.List):
-                    literal = [e.value for e in node.args[0].elts if isinstance(e, ast.Constant)]
-                    call_sites.append(literal)
-        self.assertTrue(call_sites, "expected the script to call the docker() helper")
-        for literal in call_sites:
-            self.assertIn(literal[0], {"ps", "inspect"}, f"unexpected docker subcommand: {literal}")
-        # No other subprocess entry point may exist.
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-                if node.func.attr in {"run", "Popen", "call", "check_call", "check_output"}:
-                    self.assertIsInstance(node.func.value, ast.Name)
-                    self.assertEqual(node.func.value.id, "subprocess")
-                    parent_is_helper = any(
-                        isinstance(parent, ast.FunctionDef) and parent.name == "docker" for parent in ast.walk(tree)
-                    )
-                    self.assertTrue(parent_is_helper)
+        read_only = {
+            "docker": {"ps", "inspect"},
+            "systemctl": {"list-units"},
+            "crontab": {"-l"},
+        }
+        executables = {"docker", "systemctl", "crontab", "rm", "update", "stop", "kill", "create", "run", "compose"}
+        literals = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.List)
+            and node.elts
+            and isinstance(node.elts[0], ast.Constant)
+            and node.elts[0].value in executables
+        ]
+        self.assertTrue(literals, "expected argv-shaped list literals in the module")
+        for node in literals:
+            literal = [e.value for e in node.elts if isinstance(e, ast.Constant)]
+            self.assertIn(literal[0], read_only, f"unexpected executable in argv: {literal}")
+            if any(isinstance(e, ast.Starred) for e in node.elts):
+                self.assertEqual(literal, ["docker"], "only the docker helper may forward arguments")
+                continue
+            self.assertTrue(
+                read_only[literal[0]].intersection(literal[1:]),
+                f"{literal[0]} may only be used for its read-only probe: {literal}",
+            )
+
+        helper_calls = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "docker"
+            and node.args
+            and isinstance(node.args[0], ast.List)
+        ]
+        self.assertTrue(helper_calls, "expected the script to call the docker() helper")
+        for node in helper_calls:
+            literal = [e.value for e in node.args[0].elts if isinstance(e, ast.Constant)]
+            self.assertIn(literal[0], read_only["docker"], f"unexpected docker subcommand: {literal}")
 
 
 if __name__ == "__main__":

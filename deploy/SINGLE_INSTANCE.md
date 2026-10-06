@@ -30,11 +30,22 @@ unit — never two of them for the same image and port.
 
 ## Diagnose
 
+Both tools are stdlib-only and need no installation. Copy them to the host together:
+
 ```bash
-python scripts/docker_instance_audit.py          # read-only; exits 1 when duplicates exist
+tar -C scripts -cf - docker_instance_audit.py docker_single_instance_fix.py \
+  | ssh bhay_m@factoriaserver1 'tar -C ~ -xf -'
+
+# on the host
+python3 docker_instance_audit.py          # read-only; exits 1 when duplicates exist
 ```
 
-The same information without this repository:
+The audit also prints a **read-only supervisor scan** (enabled systemd units and the current user's
+crontab, filtered for "sentinel") whenever it finds duplicates, because `docker rm -f` only sticks if
+nothing else recreates the container. It never needs root; when nothing matches it says so and
+reminds you to check `sudo crontab -l`, other users' crontabs and any CI job that runs `docker run`.
+
+The same information without these scripts:
 
 ```bash
 docker ps -a --filter ancestor=sentinelzone-ai:production \
