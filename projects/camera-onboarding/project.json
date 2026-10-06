@@ -1,0 +1,104 @@
+{
+  "id": "camera-onboarding",
+  "name": "Camera Onboarding, Survey & Tunnelling",
+  "version": "0.1.0",
+  "status": "extraction-ready",
+  "purpose": "Everything needed before inference can start: private camera setup drafts, the SEC-01 survey record with frame-quality evidence, bounded non-recording connection checks, and the loopback-only SSH tunnel that reaches a camera endpoint from a test server.",
+  "cards": ["SEC-01", "SEC-02"],
+  "owned_paths": [
+    "src/api/camera_setup.py",
+    "src/api/camera_survey.py",
+    "src/api/connection_check.py",
+    "src/api/ssh_tunnel.py",
+    "deploy/CAMERA_SURVEY.md",
+    "tests/test_camera_setup.py",
+    "tests/test_camera_survey.py",
+    "tests/test_connection_check.py",
+    "tests/test_ssh_tunnel.py"
+  ],
+  "entrypoints": [
+    "src/api/camera_setup.py:SetupStore",
+    "src/api/camera_survey.py:SurveyStore",
+    "src/api/connection_check.py:check_connection",
+    "src/api/ssh_tunnel.py:CameraTunnel"
+  ],
+  "public_interfaces": [
+    {
+      "name": "SetupStore (private camera draft)",
+      "kind": "python-class",
+      "path": "src/api/camera_setup.py",
+      "contract": "Atomic persistence of camera drafts; an incomplete draft never starts inference; secrets are never echoed back in responses.",
+      "consumers": ["api-gateway", "deployment-runtime"]
+    },
+    {
+      "name": "SurveyStore + redacted SEC-01 report",
+      "kind": "python-class",
+      "path": "src/api/camera_survey.py",
+      "contract": "Records candidate resolution, frame-quality evidence, connectivity blockers and the selected camera; report output is redacted.",
+      "consumers": ["api-gateway", "validation-harness"]
+    },
+    {
+      "name": "check_connection (bounded, non-recording)",
+      "kind": "python-function",
+      "path": "src/api/connection_check.py",
+      "contract": "Returns objective frame-quality evidence (resolution, contrast, sharpness) or a classified failure; never records media.",
+      "consumers": ["api-gateway", "dashboard-ui"]
+    },
+    {
+      "name": "CameraTunnel (loopback-only forward)",
+      "kind": "python-class",
+      "path": "src/api/ssh_tunnel.py",
+      "contract": "Forwards one camera endpoint over SSH to loopback with host-key verification; refuses non-loopback binds.",
+      "consumers": ["api-gateway", "deployment-runtime"]
+    }
+  ],
+  "depends_on": ["spatial-calibration"],
+  "coupling_exceptions": [
+    {
+      "from": "src/api/camera_setup.py",
+      "to": "src/api/live_service.py",
+      "reason": "The setup flow starts and stops the live worker directly through the gateway-owned LiveService.",
+      "resolution": "Accept a worker-control protocol from the gateway, or move the camera configuration model into event-contracts so onboarding needs no gateway import."
+    },
+    {
+      "from": "src/api/ssh_tunnel.py",
+      "to": "src/api/live_service.py",
+      "reason": "The tunnel reports its state through the live-service camera model.",
+      "resolution": "Depend on the shared camera configuration contract instead of the concrete LiveService module."
+    }
+  ],
+  "runtime_dependencies": ["pydantic", "opencv-python", "numpy", "fastapi"],
+  "tests": {
+    "python": [
+      "tests/test_camera_setup.py",
+      "tests/test_camera_survey.py",
+      "tests/test_connection_check.py",
+      "tests/test_ssh_tunnel.py"
+    ],
+    "node": []
+  },
+  "config_env": [
+    "SENTINEL_SETUP_FILE",
+    "SENTINEL_SURVEY_FILE",
+    "SENTINEL_CAMERA_CONFIG",
+    "SENTINEL_PROBE_SOURCE",
+    "SENTINEL_SSH_KEY_FILE",
+    "SENTINEL_SSH_KNOWN_HOSTS",
+    "CAMERA_GATE_RTSP",
+    "CAMERA_OFFLINE"
+  ],
+  "acceptance_criteria": [
+    "Saving an incomplete camera draft never enables inference.",
+    "A survey run produces a redacted report with resolution and quality evidence.",
+    "A failing endpoint returns a classified error, not an unhandled exception.",
+    "The tunnel binds loopback only and verifies the SSH host key."
+  ],
+  "build": {
+    "python": "python scripts/run_project_tests.py camera-onboarding",
+    "node": null
+  },
+  "risks": [
+    "This project handles camera credentials and SSH keys: the highest confidentiality risk in the product.",
+    "Two mutual dependencies on api-gateway are declared debt; today the gateway and onboarding cannot be extracted independently."
+  ]
+}

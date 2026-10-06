@@ -1,0 +1,82 @@
+{
+  "id": "perception-detection",
+  "name": "Perception & Detection",
+  "version": "0.1.0",
+  "status": "extraction-ready",
+  "purpose": "Turn camera imagery into calibrated person / heavy-machinery / PPE detections. Owns the YOLO inference wrapper, the detection-frame geometry contract, the training and dataset tooling, and the detector evaluation harness.",
+  "cards": ["SEC-02", "SEC-03"],
+  "owned_paths": [
+    "src/perception/**",
+    "weights/**",
+    "yolov8n.pt",
+    "data/construction_safety/**",
+    "data/roboflow_downloaded/**",
+    "data/reports/**",
+    "scripts/evaluate_detector.py",
+    "tests/test_detector.py",
+    "tests/test_frame_calibration.py",
+    "deploy/DETECTION_CALIBRATION.md"
+  ],
+  "entrypoints": [
+    "src/perception/detector.py:ConstructionSafetyDetector",
+    "src/perception/frame_calibration.py:geometry_for",
+    "src/perception/train_detector.py:train_construction_detector",
+    "src/perception/dataset_downloader.py:create_sample_construction_dataset",
+    "scripts/evaluate_detector.py:main"
+  ],
+  "public_interfaces": [
+    {
+      "name": "ConstructionSafetyDetector.detect",
+      "kind": "python-class",
+      "path": "src/perception/detector.py",
+      "contract": "Returns native-frame boxes with class name, confidence, PPE flags; never raises on an empty frame.",
+      "consumers": ["api-gateway", "media-pipeline", "edge-runtime"]
+    },
+    {
+      "name": "frame_calibration geometry (geometry_for / scale_boxes / to_native / iou)",
+      "kind": "python-functions",
+      "path": "src/perception/frame_calibration.py",
+      "contract": "Letterbox geometry between native and inference frames; every overlay coordinate is expressed in native pixels.",
+      "consumers": ["api-gateway", "media-pipeline"]
+    },
+    {
+      "name": "detector weight resolution",
+      "kind": "configuration",
+      "path": "src/perception/detector.py",
+      "contract": "SENTINEL_DETECTOR_WEIGHTS points at a loadable checkpoint; missing weights degrade to an explicit unavailable state rather than a crash.",
+      "consumers": ["deployment-runtime", "validation-harness"]
+    }
+  ],
+  "depends_on": [],
+  "coupling_exceptions": [],
+  "runtime_dependencies": ["torch", "torchvision", "ultralytics", "opencv-python", "numpy", "PyYAML", "roboflow (optional, training extra)"],
+  "tests": {
+    "python": ["tests/test_detector.py", "tests/test_frame_calibration.py"],
+    "node": []
+  },
+  "config_env": [
+    "SENTINEL_DETECTOR_WEIGHTS",
+    "SENTINEL_DETECTOR_CONF",
+    "SENTINEL_DETECTOR_IOU",
+    "SENTINEL_CLASS_MAPPING",
+    "SENTINEL_DEVICE",
+    "YOLO_CONFIG_DIR"
+  ],
+  "acceptance_criteria": [
+    "Detector loads a checkpoint and returns person/machinery/PPE boxes on a native frame.",
+    "Boxes survive the native -> inference -> native round trip within 1 px.",
+    "Detector evaluation script reports precision/recall against the restored ground truth.",
+    "No import of the FastAPI gateway, the agentic layer or database state from this project."
+  ],
+  "build": {
+    "python": "python scripts/run_project_tests.py perception-detection",
+    "evaluate": "python scripts/evaluate_detector.py",
+    "train": "python src/perception/train_detector.py",
+    "node": null
+  },
+  "risks": [
+    "Weights are large binaries: yolov8n.pt and weights/yolo26n.pt are tracked, so a future repository split must use LFS or a model registry.",
+    "Dataset splits under data/construction_safety are synthetic/demo samples; they validate plumbing, not site accuracy.",
+    "Ultralytics and torch are the heaviest runtime dependency in the platform; this project is the reason the CPU image is large."
+  ]
+}

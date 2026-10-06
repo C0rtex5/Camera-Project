@@ -1,0 +1,86 @@
+{
+  "id": "agentic-supervisor",
+  "name": "Agentic Safety Supervisor",
+  "version": "0.1.0",
+  "status": "extraction-ready",
+  "purpose": "The LangGraph cognitive layer: a multi-turn ReAct supervisor with six domain tools, a multi-provider LLM factory with a deterministic offline reasoner, Pipeline 1 (permits-to-work -> BIM exclusion envelopes) and Pipeline 2 (multimodal incident adjudication + active-learning curation).",
+  "cards": ["SEC-09", "SEC-10", "SEC-12"],
+  "owned_paths": [
+    "src/graph/**",
+    "data/incidents/**",
+    "data/adjudications/**",
+    "data/active_learning/**",
+    "tests/test_supervisor_agent.py",
+    "tests/test_pipelines.py"
+  ],
+  "entrypoints": [
+    "src/graph/supervisor_agent.py:build_supervisor_agent",
+    "src/graph/context_pipeline.py:build_context_pipeline",
+    "src/graph/adjudication_pipeline.py:build_adjudication_pipeline",
+    "src/graph/llm_provider.py:get_agent_llm"
+  ],
+  "public_interfaces": [
+    {
+      "name": "build_supervisor_agent (6 tools)",
+      "kind": "langgraph-graph",
+      "path": "src/graph/supervisor_agent.py",
+      "contract": "Multi-turn ReAct loop returning an answer plus the executed tool trace; every tool returns real repository state and never a placeholder.",
+      "consumers": ["api-gateway", "dashboard-ui"]
+    },
+    {
+      "name": "get_agent_llm factory",
+      "kind": "python-function",
+      "path": "src/graph/llm_provider.py",
+      "contract": "OpenAI/Anthropic when explicitly configured, DeterministicAgentLLM as the offline fallback; air-gapped operation must not require network access.",
+      "consumers": ["api-gateway", "deployment-runtime"]
+    },
+    {
+      "name": "Pipeline 1 compile_manifest / Pipeline 2 adjudicate",
+      "kind": "langgraph-graph",
+      "path": "src/graph/context_pipeline.py",
+      "contract": "Pipeline 1 persists a validated ShiftSafetyManifest and pushes envelopes to the edge runtime; Pipeline 2 persists a forensic incident record and curates edge cases into the active-learning queue.",
+      "consumers": ["api-gateway", "validation-harness"]
+    }
+  ],
+  "depends_on": ["event-contracts", "edge-runtime", "spatial-calibration"],
+  "coupling_exceptions": [
+    {
+      "from": "src/graph/context_pipeline.py",
+      "to": "src/api/app.py",
+      "reason": "Pipeline 1 reads the live SentinelEdgeRuntime instance that the API module currently holds as module-level state.",
+      "resolution": "Move the runtime registry into a small accessor module owned by edge-runtime (or inject the runtime into build_context_pipeline) and delete the src.api import."
+    },
+    {
+      "from": "src/graph/supervisor_agent.py",
+      "to": "src/api/app.py",
+      "reason": "The telemetry tool reads the same module-level runtime/demo state owned by the gateway.",
+      "resolution": "Consume a narrow telemetry-provider protocol passed into build_supervisor_agent instead of importing the API module."
+    },
+    {
+      "from": "src/graph/supervisor_agent.py",
+      "to": "src/api/demo_service.py",
+      "reason": "The supervisor's scenario/telemetry tool reaches directly into DemoService owned by the gateway.",
+      "resolution": "Provide a telemetry port (protocol + adapter registered by the gateway) and remove the concrete import."
+    }
+  ],
+  "runtime_dependencies": ["langgraph", "langchain-core", "langchain-openai", "langchain-anthropic", "pydantic"],
+  "tests": {
+    "python": ["tests/test_supervisor_agent.py", "tests/test_pipelines.py"],
+    "node": []
+  },
+  "config_env": ["SENTINEL_LLM_MODEL", "SENTINEL_MODE"],
+  "acceptance_criteria": [
+    "The supervisor answers a telemetry question offline with DeterministicAgentLLM and a visible tool trace.",
+    "Pipeline 1 rejects invalid permit text with a validation error instead of writing a manifest.",
+    "Pipeline 2 writes an incident record and appends to the active-learning queue exactly once per event.",
+    "After the coupling debt is paid, this project imports no src.api module."
+  ],
+  "build": {
+    "python": "python scripts/run_project_tests.py agentic-supervisor",
+    "node": null
+  },
+  "risks": [
+    "Three documented coupling exceptions currently make this project and api-gateway mutually dependent; the dependency graph is acyclic only because the debt is declared rather than fixed.",
+    "Production LLM behaviour depends on an external provider; the deterministic path is the only one that can be verified offline."
+  ]
+}

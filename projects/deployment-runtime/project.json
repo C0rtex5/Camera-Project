@@ -1,0 +1,111 @@
+{
+  "id": "deployment-runtime",
+  "name": "Deployment, Images & Operations",
+  "version": "0.1.0",
+  "status": "extraction-ready",
+  "purpose": "Ship and run the platform: the pinned CPU/GPU/edge/demo image definitions, hardened Compose recipes, the systemd unit, production deployment documentation and the disposable-container smoke tests that gate an image before it is called deployable.",
+  "cards": ["SEC-02", "SEC-12"],
+  "owned_paths": [
+    "Dockerfile",
+    "Dockerfile.demo-media",
+    "Dockerfile.edge",
+    "Dockerfile.gpu",
+    "compose.yaml",
+    "compose.demo.yaml",
+    "compose.gpu.yaml",
+    "compose.ssh.yaml",
+    ".dockerignore",
+    ".env.production.example",
+    "deploy/PRODUCTION.md",
+    "deploy/sentinelzone-edge.service",
+    "scripts/docker_rtsp_smoke.py",
+    "scripts/docker_setup_smoke.py",
+    "scripts/docker_ssh_smoke.py",
+    "tests/integration/**"
+  ],
+  "entrypoints": [
+    "Dockerfile",
+    "Dockerfile.gpu",
+    "Dockerfile.edge",
+    "compose.yaml",
+    "deploy/sentinelzone-edge.service",
+    "scripts/docker_setup_smoke.py"
+  ],
+  "public_interfaces": [
+    {
+      "name": "CPU runtime image (sentinelzone-ai:standalone)",
+      "kind": "container-image",
+      "path": "Dockerfile",
+      "contract": "Serves the app on :8000 with no camera configured; credentials, keys and weights are not baked in.",
+      "consumers": ["validation-harness"]
+    },
+    {
+      "name": "Hardened Compose recipe",
+      "kind": "compose-file",
+      "path": "compose.yaml",
+      "contract": "Read-only root filesystem, dropped capabilities, no-new-privileges, named data volume and pinned environment contract.",
+      "consumers": ["validation-harness"]
+    },
+    {
+      "name": "SSH-tunnel Compose overlay",
+      "kind": "compose-file",
+      "path": "compose.ssh.yaml",
+      "contract": "Adds the camera tunnel path for RTSP smoke tests without exposing the tunnel beyond loopback.",
+      "consumers": ["validation-harness"]
+    },
+    {
+      "name": "systemd edge unit",
+      "kind": "systemd-unit",
+      "path": "deploy/sentinelzone-edge.service",
+      "contract": "Runs the container on an edge host with restart-on-failure and explicit environment file.",
+      "consumers": []
+    }
+  ],
+  "depends_on": [
+    "perception-detection",
+    "spatial-calibration",
+    "hazard-tracking",
+    "trajectory-forecasting",
+    "event-contracts",
+    "edge-runtime",
+    "agentic-supervisor",
+    "api-gateway",
+    "media-pipeline",
+    "camera-onboarding",
+    "dashboard-ui"
+  ],
+  "coupling_exceptions": [],
+  "runtime_dependencies": ["docker", "docker compose", "requirements-runtime.lock (pinned by the shared platform scope)"],
+  "tests": {
+    "python": [],
+    "node": []
+  },
+  "config_env": [
+    "SENTINEL_MODE",
+    "SENTINEL_CAMERA_CONFIG",
+    "SENTINEL_SETUP_FILE",
+    "SENTINEL_DETECTOR_WEIGHTS",
+    "SENTINEL_GNN_CHECKPOINT",
+    "SENTINEL_DEVICE",
+    "SENTINEL_CPU_THREADS",
+    "OMP_NUM_THREADS",
+    "CAMERA_GATE_RTSP"
+  ],
+  "acceptance_criteria": [
+    "docker build -f Dockerfile succeeds and the image answers /health.",
+    "The Compose recipe starts with a read-only root and a writable data volume.",
+    "The three smoke scripts each bootstrap and tear down their own disposable resources.",
+    "No image bakes in camera credentials, SSH keys or private setup data."
+  ],
+  "build": {
+    "python": null,
+    "image": "docker build -f Dockerfile -t sentinelzone-ai:standalone .",
+    "compose": "docker compose -f compose.yaml up -d",
+    "smoke": "python scripts/docker_setup_smoke.py"
+  },
+  "risks": [
+    "Image builds need network access for the pinned wheels; the sandbox used for the decomposition could not build or run them.",
+    "Four Dockerfiles plus four Compose files drift easily; the smoke scripts are the only automated coupling between them.",
+    "requirements-runtime.txt/.lock stay in the shared platform scope, so a dependency bump is a cross-project change."
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "id": "trajectory-forecasting",
+  "name": "Trajectory Forecasting (GATv2 ST-GNN)",
+  "version": "0.1.0",
+  "status": "extraction-ready",
+  "purpose": "Predict multi-agent future trajectories from metric track history so the platform can warn before a struck-by event. Owns the spatio-temporal graph attention model, the camera-bound checkpoint contract, the TensorRT/ONNX export path and the offline training script.",
+  "cards": ["SEC-05", "SEC-06", "SEC-11"],
+  "owned_paths": [
+    "src/edge/gatv2_model.py",
+    "src/edge/checkpoint.py",
+    "src/edge/export_tensorrt.py",
+    "scripts/train_forecaster.py",
+    "deploy/FORECAST_TRAINING.md",
+    "tests/test_forecast_training.py"
+  ],
+  "entrypoints": [
+    "src/edge/gatv2_model.py:WorkZoneSTGNN",
+    "src/edge/checkpoint.py:validate_checkpoint",
+    "src/edge/checkpoint.py:camera_fingerprint",
+    "src/edge/export_tensorrt.py:export_onnx"
+  ],
+  "public_interfaces": [
+    {
+      "name": "WorkZoneSTGNN.forward",
+      "kind": "python-class",
+      "path": "src/edge/gatv2_model.py",
+      "contract": "Consumes a graph of metric track windows, returns a 3.0 s horizon per agent with a confidence; runs on CPU when no accelerator is present.",
+      "consumers": ["edge-runtime", "api-gateway"]
+    },
+    {
+      "name": "checkpoint contract (camera_fingerprint / validate_checkpoint)",
+      "kind": "python-functions",
+      "path": "src/edge/checkpoint.py",
+      "contract": "A forecast checkpoint is only usable with the camera calibration and sampling rate it was trained for; mismatches are refused, not coerced.",
+      "consumers": ["edge-runtime", "camera-onboarding", "validation-harness"]
+    },
+    {
+      "name": "ONNX / TensorRT export",
+      "kind": "python-functions",
+      "path": "src/edge/export_tensorrt.py",
+      "contract": "Export is optional and offline; absence of tensorrt must not break the CPU runtime path.",
+      "consumers": ["deployment-runtime"]
+    }
+  ],
+  "depends_on": ["spatial-calibration", "hazard-tracking"],
+  "coupling_exceptions": [],
+  "runtime_dependencies": ["torch", "numpy", "torch-geometric (optional, graph extra)", "tensorrt (optional, tensorrt extra)"],
+  "tests": {
+    "python": ["tests/test_forecast_training.py"],
+    "node": []
+  },
+  "config_env": ["SENTINEL_GNN_CHECKPOINT", "SENTINEL_DEVICE"],
+  "acceptance_criteria": [
+    "A checkpoint trained for camera A is refused for camera B with a named reason.",
+    "Forecast status is reported as AVAILABLE/UNAVAILABLE on the wire; an absent checkpoint never fabricates a trajectory.",
+    "Training is reproducible from reviewed metric trajectory windows only.",
+    "Inference keeps the edge cycle inside the documented latency budget on CPU."
+  ],
+  "build": {
+    "python": "python scripts/run_project_tests.py trajectory-forecasting",
+    "train": "python scripts/train_forecaster.py",
+    "node": null
+  },
+  "risks": [
+    "Forecast quality is unvalidated against physical-site data; the documentation explicitly labels forecast claims as design targets.",
+    "Checkpoint compatibility is a release-coupling point: a new detector or calibration invalidates existing forecast checkpoints."
+  ]
+}

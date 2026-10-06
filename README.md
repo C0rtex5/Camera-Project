@@ -148,6 +148,27 @@ SentinelZone-AI/
 |-- pyproject.toml                 # Project metadata and dependencies
 ```
 
+> **Note on this structure.** Several paths listed above (for example `src/tracking/`, `agent.md`
+> and `tests/test_ekf.py`) no longer exist in the code. The verified module inventory, the drift
+> table and the ownership model live in the sub-project portfolio:
+> [projects/INDEX.md](projects/INDEX.md), [docs/ARCHITECTURE_ANALYSIS.md](docs/ARCHITECTURE_ANALYSIS.md).
+
+---
+
+## Sub-projects
+
+The codebase is decomposed into 13 sub-projects, one per core functionality, each with an exclusive
+ownership scope, published interfaces, dependency rules, owned tests and acceptance criteria:
+
+```bash
+python scripts/verify_projects.py          # verify ownership + dependency integrity (must PASS)
+python scripts/run_project_tests.py --list # list the 13 sub-projects
+python scripts/run_project_tests.py all --keep-going
+```
+
+Start at [projects/INDEX.md](projects/INDEX.md) (portfolio, dependency graph, coupling debt) and
+[projects/MIGRATION_PLAN.md](projects/MIGRATION_PLAN.md) (how to make the split physical).
+
 ---
 
 ## REST API Specification

@@ -1,0 +1,69 @@
+{
+  "id": "event-contracts",
+  "name": "Safety Event & Data Contracts",
+  "version": "0.1.0",
+  "status": "extraction-ready",
+  "purpose": "Own the shared data model every other project exchanges: risk levels, business states, event types, the structured safety event, shift safety manifests, dynamic envelope configuration and incident triage verdicts. This is the interface project that keeps the edge, the API and the agent speaking one schema.",
+  "cards": ["SEC-06", "SEC-07"],
+  "owned_paths": [
+    "src/schemas/**",
+    "config/default_config.json",
+    "deploy/SAFETY_EVENT_CONTRACT.md",
+    "deploy/RISK_LEVELS.md",
+    "deploy/SETTINGS_ALIGNMENT.md",
+    "tests/test_contracts.py",
+    "tests/test_settings_alignment.py"
+  ],
+  "entrypoints": [
+    "src/schemas/safety_event.py:SafetyEvent",
+    "src/schemas/safety_event.py:build_event",
+    "src/schemas/safety_event.py:to_broadcast_payload",
+    "src/schemas/contracts.py:ShiftSafetyManifest",
+    "src/schemas/contracts.py:IncidentTriageVerdict"
+  ],
+  "public_interfaces": [
+    {
+      "name": "SafetyEvent (Pydantic v2 model)",
+      "kind": "pydantic-model",
+      "path": "src/schemas/safety_event.py",
+      "contract": "Source camera, zone/machine, timestamp, risk level and event type are mandatory and versioned; serialization is stable for WebSocket broadcast.",
+      "consumers": ["edge-runtime", "api-gateway", "agentic-supervisor", "dashboard-ui"]
+    },
+    {
+      "name": "RiskLevel / BusinessState mapping",
+      "kind": "python-enum",
+      "path": "src/schemas/safety_event.py",
+      "contract": "SAFE / ATTENTION / RISK map onto documented business states; no project may invent a fourth level locally.",
+      "consumers": ["hazard-tracking", "edge-runtime", "dashboard-ui"]
+    },
+    {
+      "name": "ShiftSafetyManifest / DynamicEnvelopeConfig",
+      "kind": "pydantic-model",
+      "path": "src/schemas/contracts.py",
+      "contract": "Validated shift manifests carrying exclusion envelopes; the compiled form is persisted and dispatched without reinterpretation.",
+      "consumers": ["agentic-supervisor", "edge-runtime"]
+    }
+  ],
+  "depends_on": [],
+  "coupling_exceptions": [],
+  "runtime_dependencies": ["pydantic"],
+  "tests": {
+    "python": ["tests/test_contracts.py", "tests/test_settings_alignment.py"],
+    "node": []
+  },
+  "config_env": [],
+  "acceptance_criteria": [
+    "Every emitted event validates against the contract and fails closed when a required field is missing.",
+    "deploy/SAFETY_EVENT_CONTRACT.md matches the code field-for-field.",
+    "default_config.json is the single source of the original settings, and tests assert it is not silently rewritten.",
+    "Adding a required field requires a contract version bump."
+  ],
+  "build": {
+    "python": "python scripts/run_project_tests.py event-contracts",
+    "node": null
+  },
+  "risks": [
+    "This project is the most-depended-on node: an unversioned field change breaks edge, API and UI at once.",
+    "Shipping configuration and code can drift because the defaults file is also edited operationally."
+  ]
+}

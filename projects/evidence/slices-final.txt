@@ -1,0 +1,1011 @@
+=== agentic-supervisor ===
+.Spatial reference 'Foundation excavation' not found in IFC. Using datum proxy.
+WARNING ⚠️ user config directory '/tmp/sentinel-4-ly76obku/yolo/Ultralytics' is not writable, using '/tmp/Ultralytics'. Set YOLO_CONFIG_DIR to override.
+Creating new Ultralytics Settings v0.0.8 file ✅ 
+View Ultralytics Settings with 'yolo settings' or at '/tmp/Ultralytics/settings.json'
+Update Settings with 'yolo settings key=value', i.e. 'yolo settings runs_dir=path/to/dir'. For help see https://docs.ultralytics.com/usage/settings.
+INFO:DemoService:Initializing DemoService on device: cpu
+INFO:ConstructionSafetyDetector:Loaded YOLO detector from yolov8n.pt targeting device: cpu
+INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+INFO:ContextGraphPipeline:Dynamically injected 1 envelopes into active edge runtime.
+INFO:ContextGraphPipeline:Shift manifest persisted; in-process dispatch attempted (no MQTT publication).
+.INFO:SentinelLLMProvider:Using Sentinel Deterministic Expert Safety Reasoner (Air-gapped Edge Core)
+INFO:SentinelLLMProvider:Using Sentinel Deterministic Expert Safety Reasoner (Air-gapped Edge Core)
+.INFO:SentinelLLMProvider:Using Sentinel Deterministic Expert Safety Reasoner (Air-gapped Edge Core)
+INFO:SentinelLLMProvider:Using Sentinel Deterministic Expert Safety Reasoner (Air-gapped Edge Core)
+...F..INFO:SentinelLLMProvider:Using Sentinel Deterministic Expert Safety Reasoner (Air-gapped Edge Core)
+INFO:BIMSpatialResolver:ifcopenshell not installed; running in proxy fallback mode.
+WARNING:BIMSpatialResolver:Spatial reference 'Trench Excavation' not found in IFC. Using datum proxy.
+INFO:ContextGraphPipeline:Dynamically injected 1 envelopes into active edge runtime.
+INFO:ContextGraphPipeline:Shift manifest persisted; in-process dispatch attempted (no MQTT publication).
+.INFO:SentinelLLMProvider:Using Sentinel Deterministic Expert Safety Reasoner (Air-gapped Edge Core)
+INFO:AdjudicationPipeline:Appended incident INC-GRAPH-TEST-01 to active learning queue: data/active_learning/curated_queue.jsonl
+.INFO:SentinelLLMProvider:Using Sentinel Deterministic Expert Safety Reasoner (Air-gapped Edge Core)
+INFO:AdjudicationPipeline:Appended incident INC-20260906-001 to active learning queue: data/active_learning/curated_queue.jsonl
+.
+======================================================================
+FAIL: test_query_site_telemetry_tool (tests.test_supervisor_agent.TestSupervisorAgent.test_query_site_telemetry_tool)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_supervisor_agent.py", line 42, in test_query_site_telemetry_tool
+    self.assertIn("total_frames", data)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'total_frames' not found in {'scenario_id': 'scenario_worker_in_excavator_blind_spot', 'status': 'UNAVAILABLE', 'error': 'No observed telemetry is available'}
+
+----------------------------------------------------------------------
+Ran 12 tests in 1.962s
+
+FAILED (failures=1)
+INFO:httpx2:HTTP Request: GET http://testserver/health "HTTP/1.1 200 OK"
+  FAIL - python: run=12 failures=1 errors=0 skipped=0; node: no node tests owned
+=== api-gateway ===
+.INFO:httpx2:HTTP Request: POST http://testserver/api/v1/incidents/publish "HTTP/1.1 200 OK"
+.INFO:httpx2:HTTP Request: POST http://testserver/api/v1/adjudication/submit "HTTP/1.1 200 OK"
+.INFO:httpx2:HTTP Request: POST http://testserver/api/v1/adjudication/submit "HTTP/1.1 200 OK"
+.INFO:httpx2:HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+.INFO:httpx2:HTTP Request: GET http://testserver/api/v1/demo/scenarios "HTTP/1.1 200 OK"
+FINFO:httpx2:HTTP Request: GET http://testserver/api/v1/demo/frame_image/scenario_1_real_site/0 "HTTP/1.1 404 Not Found"
+FINFO:httpx2:HTTP Request: GET http://testserver/health "HTTP/1.1 200 OK"
+.INFO:httpx2:HTTP Request: GET http://testserver/api/v1/demo/frame/scenario_1_real_site/5 "HTTP/1.1 500 Internal Server Error"
+FINFO:httpx2:HTTP Request: GET http://testserver/api/v1/demo/telemetry/scenario_1_real_site "HTTP/1.1 404 Not Found"
+FINFO:httpx2:HTTP Request: GET http://testserver/api/v1/agent/active_learning/queue "HTTP/1.1 200 OK"
+.INFO:SentinelLLMProvider:Using Sentinel Deterministic Expert Safety Reasoner (Air-gapped Edge Core)
+INFO:BIMSpatialResolver:ifcopenshell not installed; running in proxy fallback mode.
+WARNING:BIMSpatialResolver:Spatial reference 'Trench excavation' not found in IFC. Using datum proxy.
+INFO:ContextGraphPipeline:Dynamically injected 1 envelopes into active edge runtime.
+INFO:ContextGraphPipeline:Shift manifest persisted; in-process dispatch attempted (no MQTT publication).
+INFO:httpx2:HTTP Request: POST http://testserver/api/v1/agent/pipeline1/compile_manifest "HTTP/1.1 200 OK"
+.INFO:SentinelLLMProvider:Using Sentinel Deterministic Expert Safety Reasoner (Air-gapped Edge Core)
+INFO:AdjudicationPipeline:Appended incident INC-TEST-API-001 to active learning queue: data/active_learning/curated_queue.jsonl
+INFO:httpx2:HTTP Request: POST http://testserver/api/v1/agent/pipeline2/adjudicate "HTTP/1.1 200 OK"
+.INFO:SentinelLLMProvider:Using Sentinel Deterministic Expert Safety Reasoner (Air-gapped Edge Core)
+INFO:SentinelLLMProvider:Using Sentinel Deterministic Expert Safety Reasoner (Air-gapped Edge Core)
+INFO:httpx2:HTTP Request: POST http://testserver/api/v1/agent/supervisor/chat "HTTP/1.1 200 OK"
+.INFO:httpx2:HTTP Request: GET http://testserver/api/v1/agent/toolbox_talk/SITE-EAST?focus_hazard=Crane%20Lifting "HTTP/1.1 200 OK"
+.INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+.F..FF.FF..E......F.F...EEEE.INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+INFO:SentinelEdgeRuntime:Loaded GNN checkpoint from /tmp/tmpsqwix4cb.pt
+...INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+.....INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+..INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+.INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+.INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+.INFO:httpx2:HTTP Request: GET http://testserver/private "HTTP/1.1 401 Unauthorized"
+INFO:httpx2:HTTP Request: GET http://testserver/private "HTTP/1.1 200 OK"
+...INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+.
+======================================================================
+ERROR: test_output_index_maps_to_a_real_source_frame (tests.test_presentation_1080p30.PresentationFormatTests.test_output_index_maps_to_a_real_source_frame)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_presentation_1080p30.py", line 46, in test_output_index_maps_to_a_real_source_frame
+    item = next(i for i in media.unique_catalog(refresh=True) if i["playable"])
+StopIteration
+
+======================================================================
+ERROR: test_disabled_prewarm_still_serves_correct_frames (tests.test_presentation_1080p30.WarmPlaybackTests.test_disabled_prewarm_still_serves_correct_frames)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_presentation_1080p30.py", line 263, in test_disabled_prewarm_still_serves_correct_frames
+    packet = hub.original_frame(self.CLIP, 3)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+======================================================================
+ERROR: test_packets_still_carry_per_frame_detections (tests.test_presentation_1080p30.WarmPlaybackTests.test_packets_still_carry_per_frame_detections)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_presentation_1080p30.py", line 253, in test_packets_still_carry_per_frame_detections
+    entry = self._warm()
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_presentation_1080p30.py", line 209, in _warm
+    entry = media.media_index()[self.CLIP]
+            ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+KeyError: 'real_videos_Worker_in_excavator_blind_spot'
+
+======================================================================
+ERROR: test_warm_playback_has_no_stall_including_the_loop_wrap (tests.test_presentation_1080p30.WarmPlaybackTests.test_warm_playback_has_no_stall_including_the_loop_wrap)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_presentation_1080p30.py", line 232, in test_warm_playback_has_no_stall_including_the_loop_wrap
+    entry = self._warm()
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_presentation_1080p30.py", line 209, in _warm
+    entry = media.media_index()[self.CLIP]
+            ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+KeyError: 'real_videos_Worker_in_excavator_blind_spot'
+
+======================================================================
+ERROR: test_warmed_clip_is_fully_cached (tests.test_presentation_1080p30.WarmPlaybackTests.test_warmed_clip_is_fully_cached)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_presentation_1080p30.py", line 218, in test_warmed_clip_is_fully_cached
+    entry = self._warm()
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_presentation_1080p30.py", line 209, in _warm
+    entry = media.media_index()[self.CLIP]
+            ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+KeyError: 'real_videos_Worker_in_excavator_blind_spot'
+
+======================================================================
+FAIL: test_demo_scenarios (tests.test_demo_api.TestDemoAPI.test_demo_scenarios)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_demo_api.py", line 37, in test_demo_scenarios
+    self.assertGreaterEqual(len(scenarios), 8)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 not greater than or equal to 8
+
+======================================================================
+FAIL: test_frame_image_endpoint (tests.test_demo_api.TestDemoAPI.test_frame_image_endpoint)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_demo_api.py", line 72, in test_frame_image_endpoint
+    self.assertEqual(resp.status_code, 200)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 404 != 200
+
+======================================================================
+FAIL: test_single_frame_endpoint (tests.test_demo_api.TestDemoAPI.test_single_frame_endpoint)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_demo_api.py", line 64, in test_single_frame_endpoint
+    self.assertEqual(resp.status_code, 200)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 500 != 200
+
+======================================================================
+FAIL: test_telemetry_endpoint (tests.test_demo_api.TestDemoAPI.test_telemetry_endpoint)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_demo_api.py", line 53, in test_telemetry_endpoint
+    self.assertEqual(resp.status_code, 200)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 404 != 200
+
+======================================================================
+FAIL: test_hub_demo_and_review_isolation_without_application_login (tests.test_hub.HubTests.test_hub_demo_and_review_isolation_without_application_login)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_hub.py", line 107, in test_hub_demo_and_review_isolation_without_application_login
+    self.assertEqual(result.returncode,0,result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : INFO:httpx2:HTTP Request: GET http://testserver/api/v1/showcase/sources "HTTP/1.1 200 OK"
+Traceback (most recent call last):
+  File "<string>", line 13, in <module>
+    demo_name=public.json()['demos'][0]['id']
+              ~~~~~~~~~~~~~~~~~~~~~~^^^
+IndexError: list index out of range
+
+
+======================================================================
+FAIL: test_duplicate_recordings_are_listed_once (tests.test_presentation_1080p30.DeduplicationTests.test_duplicate_recordings_are_listed_once)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_presentation_1080p30.py", line 78, in test_duplicate_recordings_are_listed_once
+    self.assertLess(len(unique), len(everything), "the export contains duplicate recordings")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 not less than 0 : the export contains duplicate recordings
+
+======================================================================
+FAIL: test_duplicates_remain_addressable (tests.test_presentation_1080p30.DeduplicationTests.test_duplicates_remain_addressable)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_presentation_1080p30.py", line 104, in test_duplicates_remain_addressable
+    self.assertTrue(aliases)
+    ~~~~~~~~~~~~~~~^^^^^^^^^
+AssertionError: [] is not true
+
+======================================================================
+FAIL: test_the_three_known_duplicates_are_collapsed (tests.test_presentation_1080p30.DeduplicationTests.test_the_three_known_duplicates_are_collapsed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_presentation_1080p30.py", line 86, in test_the_three_known_duplicates_are_collapsed
+    self.assertGreaterEqual(len(duplicates), 3)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 not greater than or equal to 3
+
+======================================================================
+FAIL: test_every_playable_recording_is_1080p30 (tests.test_presentation_1080p30.PresentationFormatTests.test_every_playable_recording_is_1080p30)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_presentation_1080p30.py", line 25, in test_every_playable_recording_is_1080p30
+    self.assertGreaterEqual(len(playable), 10)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 not greater than or equal to 10
+
+======================================================================
+FAIL: test_exactly_1080p_and_portrait_720p_are_kept (tests.test_presentation_1080p30.UiResolutionLimitTests.test_exactly_1080p_and_portrait_720p_are_kept)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_presentation_1080p30.py", line 144, in test_exactly_1080p_and_portrait_720p_are_kept
+    self.assertIn("10810477-hd_1920_1080_30fps.mp4", listed, "1080p is not more than 1080p")
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '10810477-hd_1920_1080_30fps.mp4' not found in set() : 1080p is not more than 1080p
+
+======================================================================
+FAIL: test_no_minimum_resolution_is_imposed (tests.test_presentation_1080p30.UiResolutionLimitTests.test_no_minimum_resolution_is_imposed)
+Small sources are listed: 1080p is a ceiling, not a floor.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_presentation_1080p30.py", line 152, in test_no_minimum_resolution_is_imposed
+    self.assertTrue(small, "the smallest recordings should still be listed")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: [] is not true : the smallest recordings should still be listed
+
+----------------------------------------------------------------------
+Ran 61 tests in 6.334s
+
+FAILED (failures=11, errors=5)
+  FAIL - python: run=61 failures=11 errors=5 skipped=0; node: no node tests owned
+=== camera-onboarding ===
+........................
+----------------------------------------------------------------------
+Ran 24 tests in 7.768s
+
+OK
+INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+WARNING:SentinelEdgeRuntime:MQTT connection to 127.0.0.1:1883 failed: [Errno 111] Connection refused. Telemetry running offline.
+  PASS - python: run=24 failures=0 errors=0 skipped=0; node: no node tests owned
+=== dashboard-ui ===
+  PASS - python: no python tests owned; node: ℹ tests 66 | ℹ suites 0 | ℹ pass 66 | ℹ fail 0 | ℹ cancelled 0 | ℹ skipped 0 | ℹ todo 0 | ℹ duration_ms 149.995886
+=== deployment-runtime ===
+  PASS - python: no python tests owned; node: no node tests owned
+=== edge-runtime ===
+.INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+WARNING:SentinelEdgeRuntime:MQTT connection to 127.0.0.1:1883 failed: [Errno 111] Connection refused. Telemetry running offline.
+.
+----------------------------------------------------------------------
+Ran 2 tests in 0.009s
+
+OK
+  PASS - python: run=2 failures=0 errors=0 skipped=0; node: no node tests owned
+=== event-contracts ===
+....INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+.INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+.INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+..INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+.FFFFFFF.F.........INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+...
+======================================================================
+FAIL: test_settings_files_match_the_original_repository (tests.test_settings_alignment.OriginalSettingsPreservedTests.test_settings_files_match_the_original_repository) (setting='config/default_config.json')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_settings_alignment.py", line 48, in test_settings_files_match_the_original_repository
+    self.assertEqual(current, upstream_blob(path),
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     f"{path} differs from the original repository")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'{\n  "site_id": "SITE-5-EARTHMOVING",\n  [488 chars]n}\n' != b'' : config/default_config.json differs from the original repository
+
+======================================================================
+FAIL: test_settings_files_match_the_original_repository (tests.test_settings_alignment.OriginalSettingsPreservedTests.test_settings_files_match_the_original_repository) (setting='data/manifests/active_manifest.json')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_settings_alignment.py", line 48, in test_settings_files_match_the_original_repository
+    self.assertEqual(current, upstream_blob(path),
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     f"{path} differs from the original repository")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'{\n  "shift_id": "SHIFT_2026-09-07_SITE-E[783 chars]]\n}' != b'' : data/manifests/active_manifest.json differs from the original repository
+
+======================================================================
+FAIL: test_settings_files_match_the_original_repository (tests.test_settings_alignment.OriginalSettingsPreservedTests.test_settings_files_match_the_original_repository) (setting='data/manifests/SHIFT_2026-09-07_SITE-01.json')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_settings_alignment.py", line 48, in test_settings_files_match_the_original_repository
+    self.assertEqual(current, upstream_blob(path),
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     f"{path} differs from the original repository")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'{\n  "shift_id": "SHIFT_2026-09-07_SITE-0[781 chars]]\n}' != b'' : data/manifests/SHIFT_2026-09-07_SITE-01.json differs from the original repository
+
+======================================================================
+FAIL: test_settings_files_match_the_original_repository (tests.test_settings_alignment.OriginalSettingsPreservedTests.test_settings_files_match_the_original_repository) (setting='data/manifests/SHIFT_2026-09-07_SITE_5.json')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_settings_alignment.py", line 48, in test_settings_files_match_the_original_repository
+    self.assertEqual(current, upstream_blob(path),
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     f"{path} differs from the original repository")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'{\n  "shift_id": "SHIFT_2026-09-07_SITE_5[774 chars]]\n}' != b'' : data/manifests/SHIFT_2026-09-07_SITE_5.json differs from the original repository
+
+======================================================================
+FAIL: test_settings_files_match_the_original_repository (tests.test_settings_alignment.OriginalSettingsPreservedTests.test_settings_files_match_the_original_repository) (setting='data/manifests/SHIFT_2026-09-07_SITE-EAST.json')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_settings_alignment.py", line 48, in test_settings_files_match_the_original_repository
+    self.assertEqual(current, upstream_blob(path),
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     f"{path} differs from the original repository")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'{\n  "shift_id": "SHIFT_2026-09-07_SITE-E[783 chars]]\n}' != b'' : data/manifests/SHIFT_2026-09-07_SITE-EAST.json differs from the original repository
+
+======================================================================
+FAIL: test_settings_files_match_the_original_repository (tests.test_settings_alignment.OriginalSettingsPreservedTests.test_settings_files_match_the_original_repository) (setting='data/manifests/SHIFT_2026-09-07_SITE-NORTH.json')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_settings_alignment.py", line 48, in test_settings_files_match_the_original_repository
+    self.assertEqual(current, upstream_blob(path),
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     f"{path} differs from the original repository")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'{\n  "shift_id": "SHIFT_2026-09-07_SITE-N[786 chars]]\n}' != b'' : data/manifests/SHIFT_2026-09-07_SITE-NORTH.json differs from the original repository
+
+======================================================================
+FAIL: test_settings_files_match_the_original_repository (tests.test_settings_alignment.OriginalSettingsPreservedTests.test_settings_files_match_the_original_repository) (setting='data/roboflow_downloaded/data.yaml')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_settings_alignment.py", line 48, in test_settings_files_match_the_original_repository
+    self.assertEqual(current, upstream_blob(path),
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     f"{path} differs from the original repository")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'names:\n- Barricade\n- Dumpster\n- EXCAVA[481 chars]es\n' != b'' : data/roboflow_downloaded/data.yaml differs from the original repository
+
+======================================================================
+FAIL: test_the_dataset_path_is_portable_rather_than_a_windows_path (tests.test_settings_alignment.OriginalSettingsPreservedTests.test_the_dataset_path_is_portable_rather_than_a_windows_path)
+A deliberate, documented deviation from the original.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_settings_alignment.py", line 78, in test_the_dataset_path_is_portable_rather_than_a_windows_path
+    self.assertIn("D:/Projects", original, "the original really did carry an absolute path")
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'D:/Projects' not found in '' : the original really did carry an absolute path
+
+----------------------------------------------------------------------
+Ran 24 tests in 0.047s
+
+FAILED (failures=8)
+  FAIL - python: run=24 failures=8 errors=0 skipped=0; node: no node tests owned
+=== hazard-tracking ===
+........INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+.INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+.INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+.INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+.INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+.INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+.INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+.INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+....INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+.INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+.EEE.....................
+======================================================================
+ERROR: test_the_camera_panel_keeps_its_timestamp_and_state (tests.test_safety_zone_and_event.PacketZoneRemovalTests.test_the_camera_panel_keeps_its_timestamp_and_state)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_safety_zone_and_event.py", line 311, in test_the_camera_panel_keeps_its_timestamp_and_state
+    packet = hub.original_frame(self.CLIP, 120)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+======================================================================
+ERROR: test_the_only_zone_is_the_original_trench_rectangle (tests.test_safety_zone_and_event.PacketZoneRemovalTests.test_the_only_zone_is_the_original_trench_rectangle)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_safety_zone_and_event.py", line 305, in test_the_only_zone_is_the_original_trench_rectangle
+    packet = hub.original_frame(self.CLIP, 120)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+======================================================================
+ERROR: test_the_packet_no_longer_carries_a_zone_overlay_or_machine (tests.test_safety_zone_and_event.PacketZoneRemovalTests.test_the_packet_no_longer_carries_a_zone_overlay_or_machine)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_safety_zone_and_event.py", line 298, in test_the_packet_no_longer_carries_a_zone_overlay_or_machine
+    packet = hub.original_frame(self.CLIP, 120)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+----------------------------------------------------------------------
+Ran 45 tests in 1.102s
+
+FAILED (errors=3)
+INFO:httpx2:HTTP Request: GET http://testserver/api/v1/showcase/datasets "HTTP/1.1 200 OK"
+  FAIL - python: run=45 failures=0 errors=3 skipped=0; node: no node tests owned
+=== media-pipeline ===
+FINFO:httpx2:HTTP Request: GET http://testserver/api/v1/showcase/media "HTTP/1.1 200 OK"
+FINFO:httpx2:HTTP Request: GET http://testserver/api/v1/showcase/media/does_not_exist "HTTP/1.1 404 Not Found"
+INFO:httpx2:HTTP Request: GET http://testserver/api/v1/showcase/datasets/nope/manifest "HTTP/1.1 404 Not Found"
+..INFO:httpx2:HTTP Request: GET http://testserver/api/v1/showcase/media "HTTP/1.1 200 OK"
+EINFO:httpx2:HTTP Request: GET http://testserver/api/v1/showcase/sources "HTTP/1.1 200 OK"
+FFF.FFF..........FF..............EEEE..........FFFFE.................E...........EE...E........E...E................FEE..E.EEEEEEEEE.........E.......INFO:ConstructionSafetyDetector:Loaded YOLO detector from yolov8n.pt targeting device: cpu
+.EINFO:ConstructionSafetyDetector:Loaded YOLO detector from /home/cortex/projects/Aza/Clones/Camera-Project/yolov8n.pt targeting device: cpu
+.EE.........EE
+======================================================================
+ERROR: test_showcase_frame_endpoint_returns_jpeg (tests.test_media_catalog.MediaApiTests.test_showcase_frame_endpoint_returns_jpeg)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_media_catalog.py", line 100, in test_showcase_frame_endpoint_returns_jpeg
+    showcase = [item for item in payload["media"] if item["showcase_scenario_id"] == "scenario_worker_in_excavator_blind_spot"][0]
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
+IndexError: list index out of range
+
+======================================================================
+ERROR: test_every_agent_has_a_trail_and_a_heading (tests.test_media_tracks_ground.PacketContractTests.test_every_agent_has_a_trail_and_a_heading)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_media_tracks_ground.py", line 336, in test_every_agent_has_a_trail_and_a_heading
+    packet = hub.original_frame(self.CLIP, index)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+======================================================================
+ERROR: test_packet_carries_tracks_and_no_zone_overlay (tests.test_media_tracks_ground.PacketContractTests.test_packet_carries_tracks_and_no_zone_overlay)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_media_tracks_ground.py", line 314, in test_packet_carries_tracks_and_no_zone_overlay
+    packet = hub.original_frame(self.CLIP, 120)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+======================================================================
+ERROR: test_twin_reports_consistency_between_agents_and_workers (tests.test_media_tracks_ground.PacketContractTests.test_twin_reports_consistency_between_agents_and_workers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_media_tracks_ground.py", line 344, in test_twin_reports_consistency_between_agents_and_workers
+    packet = hub.original_frame(self.CLIP, 260)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+======================================================================
+ERROR: test_worker_detections_carry_a_track_id (tests.test_media_tracks_ground.PacketContractTests.test_worker_detections_carry_a_track_id)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_media_tracks_ground.py", line 326, in test_worker_detections_carry_a_track_id
+    packet = hub.original_frame(self.CLIP, 200)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+======================================================================
+ERROR: test_a_cab_operator_keeps_their_box_and_their_notes (tests.test_ghost_frames.OperatorStillVisibleTests.test_a_cab_operator_keeps_their_box_and_their_notes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_ghost_frames.py", line 335, in test_a_cab_operator_keeps_their_box_and_their_notes
+    packet = hub.original_frame("real_videos_Worker_and_excavator_near_barrier", 105)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+======================================================================
+ERROR: test_the_live_packet_carries_the_footprint (tests.test_calibration_and_ghosts.FootprintTests.test_the_live_packet_carries_the_footprint)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_calibration_and_ghosts.py", line 164, in test_the_live_packet_carries_the_footprint
+    packet = hub.original_frame(BARRIER, 105)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+======================================================================
+ERROR: test_the_fragment_box_is_still_served_on_the_camera_frame (tests.test_calibration_and_ghosts.FragmentFilterTests.test_the_fragment_box_is_still_served_on_the_camera_frame)
+It must not vanish from the panel: the person is still visible.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_calibration_and_ghosts.py", line 335, in test_the_fragment_box_is_still_served_on_the_camera_frame
+    packet = hub.original_frame(BARRIER, 105)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+======================================================================
+ERROR: test_the_polygon_sizes_are_no_longer_mixed_with_speckle (tests.test_calibration_and_ghosts.FragmentFilterTests.test_the_polygon_sizes_are_no_longer_mixed_with_speckle)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_calibration_and_ghosts.py", line 347, in test_the_polygon_sizes_are_no_longer_mixed_with_speckle
+    packet = hub.original_frame(BARRIER, 105)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+======================================================================
+ERROR: test_no_real_person_pair_is_ever_dropped_on_a_restored_clip (tests.test_calibration_and_ghosts.GhostFrameTests.test_no_real_person_pair_is_ever_dropped_on_a_restored_clip)
+The safety invariant: nothing at or beyond the threshold is removed.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_calibration_and_ghosts.py", line 668, in test_no_real_person_pair_is_ever_dropped_on_a_restored_clip
+    packet = hub.original_frame(BARRIER, 105)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+======================================================================
+ERROR: test_an_operator_does_not_become_a_ground_agent (tests.test_calibration_and_ghosts.GhostSuppressionTests.test_an_operator_does_not_become_a_ground_agent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_calibration_and_ghosts.py", line 205, in test_an_operator_does_not_become_a_ground_agent
+    packet = hub.original_frame(BARRIER, 105)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+======================================================================
+ERROR: test_the_packet_no_longer_reports_the_phantom_plant (tests.test_calibration_and_ghosts.GhostSuppressionTests.test_the_packet_no_longer_reports_the_phantom_plant)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_calibration_and_ghosts.py", line 243, in test_the_packet_no_longer_reports_the_phantom_plant
+    packet = hub.original_frame(BLIND_SPOT, 200)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+======================================================================
+ERROR: test_the_packet_tells_the_panel_which_clip_it_is_showing (tests.test_calibration_and_ghosts.SourceAnnotationTests.test_the_packet_tells_the_panel_which_clip_it_is_showing)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_calibration_and_ghosts.py", line 731, in test_the_packet_tells_the_panel_which_clip_it_is_showing
+    annotated = hub.original_frame("real_videos_30sec_construction", 94)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+======================================================================
+ERROR: test_the_verdict_is_cached_per_clip (tests.test_calibration_and_ghosts.SourceAnnotationTests.test_the_verdict_is_cached_per_clip)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_calibration_and_ghosts.py", line 719, in test_the_verdict_is_cached_per_clip
+    row = next(r for r in media.unique_catalog()
+               if str(r.get("id")) == "real_videos_30sec_construction")
+StopIteration
+
+======================================================================
+ERROR: test_backward_read_seeks_and_still_returns_the_right_frame (tests.test_playback_flow.FrameSourceTests.test_backward_read_seeks_and_still_returns_the_right_frame)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_playback_flow.py", line 38, in test_backward_read_seeks_and_still_returns_the_right_frame
+    entry = media._media_entry(CLIP)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/media.py", line 469, in _media_entry
+    raise HTTPException(404, "Media not found")
+fastapi.exceptions.HTTPException: 404: Media not found
+
+======================================================================
+ERROR: test_forward_playback_is_much_cheaper_than_per_frame_seeking (tests.test_playback_flow.FrameSourceTests.test_forward_playback_is_much_cheaper_than_per_frame_seeking)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_playback_flow.py", line 58, in test_forward_playback_is_much_cheaper_than_per_frame_seeking
+    path = str(media._media_entry(CLIP)["path"])
+               ~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/media.py", line 469, in _media_entry
+    raise HTTPException(404, "Media not found")
+fastapi.exceptions.HTTPException: 404: Media not found
+
+======================================================================
+ERROR: test_forward_reads_avoid_repeated_seeks (tests.test_playback_flow.FrameSourceTests.test_forward_reads_avoid_repeated_seeks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_playback_flow.py", line 30, in test_forward_reads_avoid_repeated_seeks
+    source = media.frame_source(str(media._media_entry(CLIP)["path"]))
+                                    ~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/media.py", line 469, in _media_entry
+    raise HTTPException(404, "Media not found")
+fastapi.exceptions.HTTPException: 404: Media not found
+
+======================================================================
+ERROR: test_frame_source_is_shared_per_path (tests.test_playback_flow.FrameSourceTests.test_frame_source_is_shared_per_path)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_playback_flow.py", line 81, in test_frame_source_is_shared_per_path
+    entry = media._media_entry(CLIP)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/media.py", line 469, in _media_entry
+    raise HTTPException(404, "Media not found")
+fastapi.exceptions.HTTPException: 404: Media not found
+
+======================================================================
+ERROR: test_random_access_returns_consistent_frames (tests.test_playback_flow.FrameSourceTests.test_random_access_returns_consistent_frames)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_playback_flow.py", line 49, in test_random_access_returns_consistent_frames
+    source = media.frame_source(str(media._media_entry(CLIP)["path"]))
+                                    ~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/media.py", line 469, in _media_entry
+    raise HTTPException(404, "Media not found")
+fastapi.exceptions.HTTPException: 404: Media not found
+
+======================================================================
+ERROR: test_every_frame_keeps_its_own_detection_result (tests.test_playback_flow.PrecisionPreservationTests.test_every_frame_keeps_its_own_detection_result)
+Distinct frames must not collapse onto one shared result.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_playback_flow.py", line 166, in test_every_frame_keeps_its_own_detection_result
+    entry = media.media_index()[CLIP]
+            ~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: 'real_videos_Worker_in_excavator_blind_spot'
+
+======================================================================
+ERROR: test_prewarmed_frames_match_inline_detection_exactly (tests.test_playback_flow.PrecisionPreservationTests.test_prewarmed_frames_match_inline_detection_exactly)
+Prewarming must be numerically identical to detecting on demand.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_playback_flow.py", line 201, in test_prewarmed_frames_match_inline_detection_exactly
+    entry = media.media_index()[CLIP]
+            ~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: 'real_videos_Worker_in_excavator_blind_spot'
+
+======================================================================
+ERROR: test_detection_cache_is_keyed_per_frame_so_repeats_are_free (tests.test_playback_flow.PrewarmTests.test_detection_cache_is_keyed_per_frame_so_repeats_are_free)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_playback_flow.py", line 131, in test_detection_cache_is_keyed_per_frame_so_repeats_are_free
+    entry = media.media_index()[CLIP]
+            ~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: 'real_videos_Worker_in_excavator_blind_spot'
+
+======================================================================
+ERROR: test_prewarm_reports_progress_and_stops_at_the_target (tests.test_playback_flow.PrewarmTests.test_prewarm_reports_progress_and_stops_at_the_target)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_playback_flow.py", line 103, in test_prewarm_reports_progress_and_stops_at_the_target
+    entry = media.media_index()[CLIP]
+            ~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: 'real_videos_Worker_in_excavator_blind_spot'
+
+======================================================================
+ERROR: test_prewarm_uses_a_real_target_not_an_infinite_loop (tests.test_playback_flow.PrewarmTests.test_prewarm_uses_a_real_target_not_an_infinite_loop)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_playback_flow.py", line 121, in test_prewarm_uses_a_real_target_not_an_infinite_loop
+    entry = media.media_index()[CLIP]
+            ~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: 'real_videos_Worker_in_excavator_blind_spot'
+
+======================================================================
+ERROR: test_the_packet_zone_and_the_occupancy_test_share_one_source (tests.test_3d_pose_and_zone_calibration.TrenchDrawingTests.test_the_packet_zone_and_the_occupancy_test_share_one_source)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_3d_pose_and_zone_calibration.py", line 165, in test_the_packet_zone_and_the_occupancy_test_share_one_source
+    packet = hub.original_frame("real_videos_Worker_in_excavator_blind_spot", 120)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+======================================================================
+ERROR: test_enabling_ppe_leaves_the_detections_identical (tests.test_ppe_proximity_and_separation.PPERecordingTests.test_enabling_ppe_leaves_the_detections_identical)
+PPE must not be able to change what is drawn on the frame.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_ppe_proximity_and_separation.py", line 44, in test_enabling_ppe_leaves_the_detections_identical
+    frame, _, _ = media.decode_frame(BARRIER_CLIP, 30)
+                  ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/media.py", line 565, in decode_frame
+    entry = _media_entry(media_id)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/media.py", line 469, in _media_entry
+    raise HTTPException(404, "Media not found")
+fastapi.exceptions.HTTPException: 404: Media not found
+
+======================================================================
+ERROR: test_ppe_is_actually_measured_on_a_restored_recording (tests.test_ppe_proximity_and_separation.PPERecordingTests.test_ppe_is_actually_measured_on_a_restored_recording)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_ppe_proximity_and_separation.py", line 60, in test_ppe_is_actually_measured_on_a_restored_recording
+    frame, _, _ = media.decode_frame(BARRIER_CLIP, 30)
+                  ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/media.py", line 565, in decode_frame
+    entry = _media_entry(media_id)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/media.py", line 469, in _media_entry
+    raise HTTPException(404, "Media not found")
+fastapi.exceptions.HTTPException: 404: Media not found
+
+======================================================================
+ERROR: test_ppe_rides_the_cache_without_a_second_inference (tests.test_ppe_proximity_and_separation.PPERecordingTests.test_ppe_rides_the_cache_without_a_second_inference)
+The PPE records must arrive with the boxes, not from a second pass.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_ppe_proximity_and_separation.py", line 99, in test_ppe_rides_the_cache_without_a_second_inference
+    path, mtime = _path_for(BARRIER_CLIP), _mtime_for(BARRIER_CLIP)
+                  ~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_ppe_proximity_and_separation.py", line 316, in _path_for
+    return media.media_index()[media_id]["path"]
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'real_videos_Worker_and_excavator_near_barrier'
+
+======================================================================
+ERROR: test_removed_fields_stay_removed (tests.test_ppe_proximity_and_separation.SeparationTests.test_removed_fields_stay_removed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_ppe_proximity_and_separation.py", line 266, in test_removed_fields_stay_removed
+    packet = hub.original_frame(BARRIER_CLIP, 105)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+======================================================================
+ERROR: test_the_packet_reports_proximity_and_ppe_together (tests.test_ppe_proximity_and_separation.SeparationTests.test_the_packet_reports_proximity_and_ppe_together)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_ppe_proximity_and_separation.py", line 254, in test_the_packet_reports_proximity_and_ppe_together
+    packet = hub.original_frame(BARRIER_CLIP, 60)
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/src/api/hub.py", line 95, in original_frame
+    if entry is None or not entry['playable']: raise HTTPException(404,'Demo not found')
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+fastapi.exceptions.HTTPException: 404: Demo not found
+
+======================================================================
+FAIL: test_dataset_endpoints_and_manifest (tests.test_media_catalog.MediaApiTests.test_dataset_endpoints_and_manifest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_media_catalog.py", line 108, in test_dataset_endpoints_and_manifest
+    self.assertEqual(payload["count"], 2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 2
+
+======================================================================
+FAIL: test_media_list_and_detail_endpoints (tests.test_media_catalog.MediaApiTests.test_media_list_and_detail_endpoints)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_media_catalog.py", line 93, in test_media_list_and_detail_endpoints
+    self.assertGreaterEqual(payload["count"], 9)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 not greater than or equal to 9
+
+======================================================================
+FAIL: test_showcase_sources_include_original_media_and_datasets (tests.test_media_catalog.MediaApiTests.test_showcase_sources_include_original_media_and_datasets)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_media_catalog.py", line 88, in test_showcase_sources_include_original_media_and_datasets
+    self.assertGreaterEqual(payload["original_media"]["original_media"], 9)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 not greater than or equal to 9
+
+======================================================================
+FAIL: test_datasets_expose_splits_classes_and_license (tests.test_media_catalog.MediaCatalogTests.test_datasets_expose_splits_classes_and_license)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_media_catalog.py", line 47, in test_datasets_expose_splits_classes_and_license
+    self.assertIn("roboflow_downloaded", datasets)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'roboflow_downloaded' not found in {'construction_safety': {'id': 'construction_safety', 'name': 'Construction Safety', 'path': '/home/cortex/projects/Aza/Clones/Camera-Project/data/construction_safety', 'layout': 'images_first', 'class_count': 10, 'class_names': ['Hardhat', 'Mask', 'NO-Hardhat', 'NO-Mask', 'NO-Safety Vest', 'Person', 'Safety Cone', 'Safety Vest', 'machinery', 'vehicle'], 'splits': [{'name': 'test', 'images': 2, 'labels': 2, 'complete': True}, {'name': 'train', 'images': 8, 'labels': 8, 'complete': True}, {'name': 'val', 'images': 2, 'labels': 2, 'complete': True}], 'total_images': 12, 'total_labels': 12, 'license': '', 'source': ''}}
+
+======================================================================
+FAIL: test_media_catalog_lists_original_real_and_test_videos (tests.test_media_catalog.MediaCatalogTests.test_media_catalog_lists_original_real_and_test_videos)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_media_catalog.py", line 25, in test_media_catalog_lists_original_real_and_test_videos
+    self.assertIn("Worker_in_excavator_blind_spot.mp4", names)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Worker_in_excavator_blind_spot.mp4' not found in set()
+
+======================================================================
+FAIL: test_resolve_media_path_rewrites_legacy_relative_paths (tests.test_media_catalog.MediaCatalogTests.test_resolve_media_path_rewrites_legacy_relative_paths)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_media_catalog.py", line 63, in test_resolve_media_path_rewrites_legacy_relative_paths
+    self.assertTrue(Path(resolved).is_file(), resolved)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : data/test_videos/crew_site_video.mp4
+
+======================================================================
+FAIL: test_showcase_videos_are_playable_and_tagged (tests.test_media_catalog.MediaCatalogTests.test_showcase_videos_are_playable_and_tagged)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_media_catalog.py", line 33, in test_showcase_videos_are_playable_and_tagged
+    self.assertIn("scenario_worker_in_excavator_blind_spot", showcase)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'scenario_worker_in_excavator_blind_spot' not found in {}
+
+======================================================================
+FAIL: test_summary_reports_counts (tests.test_media_catalog.MediaCatalogTests.test_summary_reports_counts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_media_catalog.py", line 68, in test_summary_reports_counts
+    self.assertGreaterEqual(summary["original_media"], 9)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 not greater than or equal to 9
+
+======================================================================
+FAIL: test_the_original_settings_files_are_untouched (tests.test_media_tracks_ground.NoSettingsRegressTests.test_the_original_settings_files_are_untouched) (setting='config/default_config.json')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_media_tracks_ground.py", line 411, in test_the_original_settings_files_are_untouched
+    self.assertTrue(original, f"{path} must exist in the original repository")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'' is not true : config/default_config.json must exist in the original repository
+
+======================================================================
+FAIL: test_the_original_settings_files_are_untouched (tests.test_media_tracks_ground.NoSettingsRegressTests.test_the_original_settings_files_are_untouched) (setting='data/manifests/active_manifest.json')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_media_tracks_ground.py", line 411, in test_the_original_settings_files_are_untouched
+    self.assertTrue(original, f"{path} must exist in the original repository")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'' is not true : data/manifests/active_manifest.json must exist in the original repository
+
+======================================================================
+FAIL: test_each_object_gets_at_most_one_track_id (tests.test_ghost_frames.EveryClipIsCleanTests.test_each_object_gets_at_most_one_track_id)
+Two frames on one object would also mean two ground agents.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_ghost_frames.py", line 238, in setUp
+    self.assertGreater(len(self.clips), 5, "the restored clips must be present")
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 not greater than 5 : the restored clips must be present
+
+======================================================================
+FAIL: test_every_served_frame_is_a_rectangle_inside_the_image (tests.test_ghost_frames.EveryClipIsCleanTests.test_every_served_frame_is_a_rectangle_inside_the_image)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_ghost_frames.py", line 238, in setUp
+    self.assertGreater(len(self.clips), 5, "the restored clips must be present")
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 not greater than 5 : the restored clips must be present
+
+======================================================================
+FAIL: test_no_clip_serves_a_same_class_ghost (tests.test_ghost_frames.EveryClipIsCleanTests.test_no_clip_serves_a_same_class_ghost)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_ghost_frames.py", line 238, in setUp
+    self.assertGreater(len(self.clips), 5, "the restored clips must be present")
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 not greater than 5 : the restored clips must be present
+
+======================================================================
+FAIL: test_the_served_row_shape_is_stable (tests.test_ghost_frames.EveryClipIsCleanTests.test_the_served_row_shape_is_stable)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_ghost_frames.py", line 238, in setUp
+    self.assertGreater(len(self.clips), 5, "the restored clips must be present")
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 not greater than 5 : the restored clips must be present
+
+======================================================================
+FAIL: test_the_annotated_clips_are_identified (tests.test_calibration_and_ghosts.SourceAnnotationTests.test_the_annotated_clips_are_identified)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_calibration_and_ghosts.py", line 715, in test_the_annotated_clips_are_identified
+    self.assertTrue(expect_true <= seen, "the annotated clips must be catalogued")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : the annotated clips must be catalogued
+
+----------------------------------------------------------------------
+Ran 169 tests in 2.443s
+
+FAILED (failures=15, errors=30)
+INFO:ConstructionSafetyDetector:Loaded YOLO detector from yolov8n.pt targeting device: cpu
+  FAIL - python: run=169 failures=15 errors=30 skipped=0; node: no node tests owned
+=== perception-detection ===
+.INFO:ConstructionSafetyDetector:Loaded YOLO detector from yolov8n.pt targeting device: cpu
+.INFO:ConstructionSafetyDetector:Loaded YOLO detector from yolov8n.pt targeting device: cpu
+INFO:SentinelEdgeRuntime:SentinelEdgeRuntime initialized on CPU
+WARNING:SentinelEdgeRuntime:MQTT connection to 127.0.0.1:1883 failed: [Errno 111] Connection refused. Telemetry running offline.
+.INFO:ConstructionSafetyDetector:Loaded YOLO detector from yolov8n.pt targeting device: cpu
+INFO:ConstructionDatasetDownloader:Sample construction safety dataset generated at /tmp/sentinel-4-n4fb19_v/data/test_dataset
+..............INFO:httpx2:HTTP Request: GET http://testserver/api/v1/hub/sources "HTTP/1.1 200 OK"
+E....
+======================================================================
+ERROR: test_served_packet_boxes_match_the_served_frame_size (tests.test_frame_calibration.HubCalibrationContractTests.test_served_packet_boxes_match_the_served_frame_size)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_frame_calibration.py", line 183, in test_served_packet_boxes_match_the_served_frame_size
+    target = next(d for d in sources["demos"] if d["group"] == "real_videos")
+StopIteration
+
+----------------------------------------------------------------------
+Ran 22 tests in 0.360s
+
+FAILED (errors=1)
+  FAIL - python: run=22 failures=0 errors=1 skipped=0; node: no node tests owned
+=== spatial-calibration ===
+...ERROR:SentinelHomography:CRITICAL: Calibration drift RMSE = 0.7071m exceeds 0.15m
+.......
+----------------------------------------------------------------------
+Ran 10 tests in 4.421s
+
+OK
+  PASS - python: run=10 failures=0 errors=0 skipped=0; node: no node tests owned
+=== trajectory-forecasting ===
+..
+----------------------------------------------------------------------
+Ran 2 tests in 3.565s
+
+OK
+  PASS - python: run=2 failures=0 errors=0 skipped=0; node: no node tests owned
+=== validation-harness ===
+.F.FF.FF
+======================================================================
+FAIL: test_dataset_splits_have_image_label_parity (tests.test_original_assets.OriginalAssetRestorationTests.test_dataset_splits_have_image_label_parity)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_original_assets.py", line 82, in test_dataset_splits_have_image_label_parity
+    self.assertEqual(len(images), expected, f"{name}/{split} images")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 != 307 : roboflow_downloaded/train images
+
+======================================================================
+FAIL: test_lfs_video_objects_match_manifest (tests.test_original_assets.OriginalAssetRestorationTests.test_lfs_video_objects_match_manifest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_original_assets.py", line 59, in test_lfs_video_objects_match_manifest
+    self.assertTrue(path.is_file(), item["path"])
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : data/real_videos/10810477-hd_1920_1080_30fps.mp4
+
+======================================================================
+FAIL: test_manifest_pins_upstream_and_showcase_sources (tests.test_original_assets.OriginalAssetRestorationTests.test_manifest_pins_upstream_and_showcase_sources)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_original_assets.py", line 27, in test_manifest_pins_upstream_and_showcase_sources
+    self.assertTrue((ROOT / scenario["source_path"]).is_file(), scenario["source_path"])
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : data/real_videos/Worker_in_excavator_blind_spot.mp4
+
+======================================================================
+FAIL: test_showcase_videos_decode_and_have_frames (tests.test_original_assets.OriginalAssetRestorationTests.test_showcase_videos_decode_and_have_frames)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_original_assets.py", line 70, in test_showcase_videos_decode_and_have_frames
+    self.assertTrue(capture.isOpened(), scenario["source_path"])
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : data/real_videos/Worker_in_excavator_blind_spot.mp4
+
+======================================================================
+FAIL: test_verifier_passes_without_fetching (tests.test_original_assets.OriginalAssetRestorationTests.test_verifier_passes_without_fetching)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cortex/projects/Aza/Clones/Camera-Project/tests/test_original_assets.py", line 97, in test_verifier_passes_without_fetching
+    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : LFS REMOVED  data/real_videos/14117669-uhd_3840_2160_30fps.mp4 (87182348 bytes) - absent as intended: exceeds the 1080p presentation limit for this deployment; the UI does not list anything larger than 1080p, so the file was removed from the local delivery at the project owner's request
+LFS REMOVED  data/real_videos/15100676_2160_3840_30fps.mp4 (255720342 bytes) - absent as intended: exceeds the 1080p presentation limit for this deployment; the UI does not list anything larger than 1080p, so the file was removed from the local delivery at the project owner's request
+LFS OK  weights/yolo26n.pt (5544453 bytes)
+LFS OK  yolov8n.pt (6549796 bytes)
+DATASET OK  construction_safety/train: 8 images, 8 labels
+DATASET OK  construction_safety/val: 2 images, 2 labels
+DATASET OK  construction_safety/test: 2 images, 2 labels
+DATASET OK  roboflow_downloaded/train: 0 images, 0 labels
+DATASET OK  roboflow_downloaded/valid: 0 images, 0 labels
+DATASET OK  roboflow_downloaded/test: 0 images, 0 labels
+ERROR: missing LFS object: data/real_videos/10810477-hd_1920_1080_30fps.mp4
+ERROR: missing LFS object: data/real_videos/30sec_construction.mp4
+ERROR: missing LFS object: data/real_videos/Worker_and_excavator_near_barrier.mp4
+ERROR: missing LFS object: data/real_videos/Worker_in_excavator_blind_spot.mp4
+ERROR: missing LFS object: data/real_videos/Worker_near_heavy_equipment_exca9.mp4
+ERROR: missing LFS object: data/real_videos/construction_ppe_sample.mp4
+ERROR: missing LFS object: data/real_videos/veo3_construction.mp4
+ERROR: missing LFS object: data/test_videos/Worker_in_excavator_blind_spot.mp4
+ERROR: missing LFS object: data/test_videos/crew_site_video.mp4
+ERROR: missing LFS object: data/test_videos/exca_near_miss.mp4
+ERROR: missing LFS object: data/test_videos/real_site_active.mp4
+ERROR: missing LFS object: data/test_videos/scenario_1_near_miss.mp4
+ERROR: missing LFS object: data/test_videos/scenario_2_safe_coworking.mp4
+ERROR: missing LFS object: data/test_videos/scenario_3_trench_breach.mp4
+ERROR: missing LFS object: data/test_videos/user_site_video.mp4
+ERROR: missing LFS object: data/test_videos/workforce_site_video.mp4
+ERROR: roboflow_downloaded train image count 0 != 307
+ERROR: roboflow_downloaded train label count 0 != 307
+ERROR: roboflow_downloaded valid image count 0 != 57
+ERROR: roboflow_downloaded valid label count 0 != 57
+ERROR: roboflow_downloaded test image count 0 != 34
+ERROR: roboflow_downloaded test label count 0 != 34
+asset verification failed: 22 error(s), 0 warning(s)
+
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.214s
+
+FAILED (failures=5)
+  FAIL - python: run=8 failures=5 errors=0 skipped=0; node: no node tests owned
+
+RESULT: 6/13 sub-project slices passed

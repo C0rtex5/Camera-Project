@@ -1,0 +1,99 @@
+{
+  "id": "media-pipeline",
+  "name": "Restored Media, Tracks & Ghost Suppression",
+  "version": "0.1.0",
+  "status": "extraction-ready",
+  "purpose": "Serve and analyse the restored original recordings and dataset splits without a camera: read-only catalog, calibrated detection overlay, metric ground tracks, playback flow and the ghost-suppression rule that guarantees two served frames never describe one object twice.",
+  "cards": ["SEC-02", "SEC-09", "SEC-10"],
+  "owned_paths": [
+    "src/api/media.py",
+    "src/api/media_detection.py",
+    "src/api/media_tracks.py",
+    "src/api/detection_ghosts.py",
+    "src/demo_assets/**",
+    "dam_sample_0.jpg",
+    "dam_sample_1.jpg",
+    "tests/test_media_catalog.py",
+    "tests/test_media_tracks_ground.py",
+    "tests/test_ghost_frames.py",
+    "tests/test_calibration_and_ghosts.py",
+    "tests/test_playback_flow.py",
+    "tests/test_3d_pose_and_zone_calibration.py",
+    "tests/test_ppe_proximity_and_separation.py"
+  ],
+  "entrypoints": [
+    "src/api/media.py:source_index_for_output",
+    "src/api/media_detection.py:detect_for_media",
+    "src/api/media_tracks.py:plane_for_media",
+    "src/api/detection_ghosts.py:suppress_ghosts"
+  ],
+  "public_interfaces": [
+    {
+      "name": "read-only media catalog (media_roots / source_index_for_output)",
+      "kind": "python-functions",
+      "path": "src/api/media.py",
+      "contract": "Catalogues restored videos and dataset splits with stable ids and checksums; never mutates the underlying files.",
+      "consumers": ["api-gateway", "validation-harness"]
+    },
+    {
+      "name": "calibrated detection cache (detect_for_media)",
+      "kind": "python-functions",
+      "path": "src/api/media_detection.py",
+      "contract": "Person/machinery boxes on native frames with a bounded cache and explicit disabled state when weights are absent.",
+      "consumers": ["api-gateway", "dashboard-ui"]
+    },
+    {
+      "name": "metric ground tracks + ground plane fit",
+      "kind": "python-functions",
+      "path": "src/api/media_tracks.py",
+      "contract": "Metric tracks, zone membership and a fitted ground plane per media source, shaped for the digital-twin packet.",
+      "consumers": ["api-gateway", "dashboard-ui"]
+    },
+    {
+      "name": "ghost suppression contract",
+      "kind": "python-function",
+      "path": "src/api/detection_ghosts.py",
+      "contract": "At most one served detection per real object per frame; operator rows are kept visible.",
+      "consumers": ["api-gateway"]
+    }
+  ],
+  "depends_on": ["perception-detection", "spatial-calibration"],
+  "coupling_exceptions": [],
+  "runtime_dependencies": ["numpy", "opencv-python", "torch", "PyYAML", "fastapi"],
+  "tests": {
+    "python": [
+      "tests/test_media_catalog.py",
+      "tests/test_media_tracks_ground.py",
+      "tests/test_ghost_frames.py",
+      "tests/test_calibration_and_ghosts.py",
+      "tests/test_playback_flow.py",
+      "tests/test_3d_pose_and_zone_calibration.py",
+      "tests/test_ppe_proximity_and_separation.py"
+    ],
+    "node": []
+  },
+  "config_env": [
+    "SENTINEL_MEDIA_DIRS",
+    "SENTINEL_DATASET_DIRS",
+    "SENTINEL_MEDIA_DETECT",
+    "SENTINEL_MEDIA_PREWARM",
+    "SENTINEL_MEDIA_PREWARM_WORKERS",
+    "SENTINEL_MEDIA_PREWARM_CLIPS",
+    "SENTINEL_MEDIA_JPEG_CACHE_MB",
+    "SENTINEL_MEDIA_DETECTION_CACHE"
+  ],
+  "acceptance_criteria": [
+    "The catalog lists every restored video and dataset split without a camera present.",
+    "Ghost suppression holds under the randomised invariant test and at threshold boundaries.",
+    "A ground plane fitted from a recording yields metric tracks consistent with the calibrated band.",
+    "Playback stays smooth at the documented presentation format (1080p / 30 fps)."
+  ],
+  "build": {
+    "python": "python scripts/run_project_tests.py media-pipeline",
+    "node": null
+  },
+  "risks": [
+    "Recorded media is demo evidence only; treating restored clips as site validation is explicitly forbidden by the validation policy.",
+    "The catalog depends on Git LFS media that may be absent in a shallow clone; absent assets must degrade to an explicit unavailable state."
+  ]
+}

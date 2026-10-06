@@ -1,0 +1,73 @@
+{
+  "id": "dashboard-ui",
+  "name": "Operator Dashboard & Digital Twin UI",
+  "version": "0.1.0",
+  "status": "extraction-ready",
+  "purpose": "The browser experience: the split-view detection hub (2D overlay + Three.js metric ground twin), the live camera page, the camera setup page, the restored-asset browser and the operator review controls. Pure client assets with no server-side import surface.",
+  "cards": ["SEC-08", "SEC-10", "SEC-11"],
+  "owned_paths": [
+    "src/dashboard/**",
+    "tests/hub.test.cjs",
+    "tests/live_dashboard.test.cjs",
+    "tests/media_panel.test.cjs",
+    "tests/safety_zone_ui.test.cjs"
+  ],
+  "entrypoints": [
+    "src/dashboard/index.html",
+    "src/dashboard/live.html",
+    "src/dashboard/setup.html",
+    "src/dashboard/assets/hub.js",
+    "src/dashboard/assets/media.js"
+  ],
+  "public_interfaces": [
+    {
+      "name": "HubCore display rules",
+      "kind": "javascript-module",
+      "path": "src/dashboard/assets/hub_core.js",
+      "contract": "Pure functions for staleness expiry, packet validity, risk/PPE presentation; unit-testable in Node without a DOM.",
+      "consumers": ["validation-harness"]
+    },
+    {
+      "name": "telemetry packet consumption",
+      "kind": "http-contract-consumer",
+      "path": "src/dashboard/assets/hub.js",
+      "contract": "Consumes the api-gateway packet contract; a stale packet must visibly expire instead of freezing the last frame.",
+      "consumers": []
+    },
+    {
+      "name": "3D digital twin scene",
+      "kind": "three-js-scene",
+      "path": "src/dashboard/assets/hub.js",
+      "contract": "Renders the metric ground plane, tracks, machinery hulls and hazard geometry; a missing WebGL context degrades to a text notice, never a blank page.",
+      "consumers": []
+    }
+  ],
+  "depends_on": [],
+  "coupling_exceptions": [],
+  "runtime_dependencies": ["three.js r128 (vendored)", "modern browser (Canvas 2D + WebGL)"],
+  "tests": {
+    "python": [],
+    "node": [
+      "tests/hub.test.cjs",
+      "tests/live_dashboard.test.cjs",
+      "tests/media_panel.test.cjs",
+      "tests/safety_zone_ui.test.cjs"
+    ]
+  },
+  "config_env": [],
+  "acceptance_criteria": [
+    "node --test tests/*.test.cjs passes with no network and no browser.",
+    "A hanging backend expires the displayed frame and metrics instead of showing stale data as live.",
+    "Hidden pages do not fetch or decode frames.",
+    "Missing WebGL still shows the camera image with an explicit notice."
+  ],
+  "build": {
+    "python": null,
+    "node": "python scripts/run_project_tests.py dashboard-ui",
+    "serve": "served as static assets by api-gateway at / and /setup"
+  },
+  "risks": [
+    "The UI is coupled to the gateway only through the HTTP packet contract, which is not machine-checked today; a contract test would harden it.",
+    "Vendored three.js r128 is a pinned third-party asset that needs an upgrade path and a licence notice (kept in vendor/THREE-LICENSE.txt)."
+  ]
+}
