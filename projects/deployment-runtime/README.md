@@ -18,6 +18,9 @@ tests that gate an image before anyone calls it deployable.
 | `compose.yaml`, `compose.gpu.yaml`, `compose.ssh.yaml`, `compose.demo.yaml` | Hardened deployment recipes and overlays |
 | `.dockerignore`, `.env.production.example` | Build context exclusions and the production environment contract |
 | `deploy/PRODUCTION.md`, `deploy/sentinelzone-edge.service` | Runbook and the systemd edge unit |
+| `deploy/SINGLE_INSTANCE.md` | Diagnosis and fix for two containers taking turns owning port 8000, plus the one-time name/volume migration |
+| `scripts/docker_instance_audit.py` | Read-only audit: who supervises each container, which host port is contested, exit 1 on duplicates |
+| `tests/test_docker_instance_audit.py` | Nine tests against a stubbed `docker` CLI (no daemon needed), including the reported flapping fixture |
 | `scripts/docker_setup_smoke.py`, `docker_rtsp_smoke.py`, `docker_ssh_smoke.py` | Image-level gates using disposable containers/keys |
 | `tests/integration/Dockerfile.ssh`, `tests/integration/rtsp_probe.py` | Integration fixtures for the tunnel/RTSP smoke paths |
 

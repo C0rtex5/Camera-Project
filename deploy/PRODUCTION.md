@@ -27,6 +27,8 @@ For NVIDIA servers with Docker Compose 2.30+ and NVIDIA Container Toolkit instal
 
 Keep a single server worker: multiple workers would open duplicate camera connections. Put an authenticated TLS reverse proxy in front of the localhost-bound service for remote access. Do not place credentials in URLs. Camera credentials are environment variables and are excluded from JSON telemetry.
 
+Keep a single **container** as well. If two containers from this image run on the same host they both publish port 8000 and both carry a restart policy, so they take turns owning the port and the deployment looks like it is flapping. `compose.yaml` pins the project and container name to `sentinelzone` so a second stack fails loudly instead of starting; check the host with `python scripts/docker_instance_audit.py` and see [SINGLE_INSTANCE.md](SINGLE_INSTANCE.md) to diagnose and remove a duplicate.
+
 ## SEC-01 camera survey
 
 The setup page includes a **PoC camera survey** workflow. For each candidate, enter the camera ID, physical location, IP/host, RTSP port, stream path, access path, and optional SSH tunnel; the legacy full RTSP address remains supported. The application records TCP reachability, transport type, one-frame resolution, and objective quality measurements (brightness, contrast, sharpness, and screening notes), and logs a structured connectivity blocker when the feed cannot be reached. The survey does not silently make the candidate the active camera.

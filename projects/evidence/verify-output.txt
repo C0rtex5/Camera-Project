@@ -1,7 +1,7 @@
 Sub-project decomposition verification
 ============================================================
-tracked files        : 479
-owned by one project : 433
+tracked files        : 482
+owned by one project : 436
 shared platform files: 7
 projects             : 13
 cross-project imports: 45
@@ -11,7 +11,7 @@ files per project
   media-pipeline            256
   perception-detection       43
   validation-harness         25
-  deployment-runtime         17
+  deployment-runtime         20
   agentic-supervisor         16
   api-gateway                13
   dashboard-ui               13

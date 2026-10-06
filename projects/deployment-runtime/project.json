@@ -17,10 +17,13 @@
     ".dockerignore",
     ".env.production.example",
     "deploy/PRODUCTION.md",
+    "deploy/SINGLE_INSTANCE.md",
     "deploy/sentinelzone-edge.service",
     "scripts/docker_rtsp_smoke.py",
     "scripts/docker_setup_smoke.py",
     "scripts/docker_ssh_smoke.py",
+    "scripts/docker_instance_audit.py",
+    "tests/test_docker_instance_audit.py",
     "tests/integration/**"
   ],
   "entrypoints": [
@@ -29,7 +32,8 @@
     "Dockerfile.edge",
     "compose.yaml",
     "deploy/sentinelzone-edge.service",
-    "scripts/docker_setup_smoke.py"
+    "scripts/docker_setup_smoke.py",
+    "scripts/docker_instance_audit.py"
   ],
   "public_interfaces": [
     {
@@ -59,6 +63,20 @@
       "path": "deploy/sentinelzone-edge.service",
       "contract": "Runs the container on an edge host with restart-on-failure and explicit environment file.",
       "consumers": []
+    },
+    {
+      "name": "single-instance identity (compose project/container/volume names)",
+      "kind": "deployment-contract",
+      "path": "compose.yaml",
+      "contract": "Pins project name 'sentinelzone', container name 'sentinelzone' and volume 'sentinelzone-state' so a second stack from another checkout fails loudly instead of running a duplicate that fights for host port 8000.",
+      "consumers": ["validation-harness"]
+    },
+    {
+      "name": "duplicate-instance audit (read-only)",
+      "kind": "cli-tool",
+      "path": "scripts/docker_instance_audit.py",
+      "contract": "Lists every container from the SentinelZone images with its supervisor, restart policy and published ports; exits 1 when two containers do the same job or contest one host port, and prints remediation without ever mutating anything.",
+      "consumers": ["validation-harness"]
     }
   ],
   "depends_on": [
@@ -77,7 +95,7 @@
   "coupling_exceptions": [],
   "runtime_dependencies": ["docker", "docker compose", "requirements-runtime.lock (pinned by the shared platform scope)"],
   "tests": {
-    "python": [],
+    "python": ["tests/test_docker_instance_audit.py"],
     "node": []
   },
   "config_env": [
@@ -95,17 +113,22 @@
     "docker build -f Dockerfile succeeds and the image answers /health.",
     "The Compose recipe starts with a read-only root and a writable data volume.",
     "The three smoke scripts each bootstrap and tear down their own disposable resources.",
-    "No image bakes in camera credentials, SSH keys or private setup data."
+    "No image bakes in camera credentials, SSH keys or private setup data.",
+    "Exactly one container from this image is supervised on a host: a second compose project or docker run cannot silently coexist (pinned names).",
+    "scripts/docker_instance_audit.py reports OK on a healthy host, names the supervisor of every container, and never mutates anything."
   ],
   "build": {
-    "python": null,
+    "python": "python scripts/run_project_tests.py deployment-runtime",
     "image": "docker build -f Dockerfile -t sentinelzone-ai:standalone .",
     "compose": "docker compose -f compose.yaml up -d",
+    "audit": "python scripts/docker_instance_audit.py",
     "smoke": "python scripts/docker_setup_smoke.py"
   },
   "risks": [
     "Image builds need network access for the pinned wheels; the sandbox used for the decomposition could not build or run them.",
     "Four Dockerfiles plus four Compose files drift easily; the smoke scripts are the only automated coupling between them.",
-    "requirements-runtime.txt/.lock stay in the shared platform scope, so a dependency bump is a cross-project change."
+    "requirements-runtime.txt/.lock stay in the shared platform scope, so a dependency bump is a cross-project change.",
+    "Observed on a site host: two containers from the same image, both with restart policies and both publishing 8000, alternate ownership of the port and look like a flapping deployment. The pinned names stop the repository from recreating that; a duplicate started by hand, cron or another unit must still be found and removed (deploy/SINGLE_INSTANCE.md).",
+    "Pinning container_name disables `docker compose up --scale`, deliberately: a second worker would open a duplicate camera connection."
   ]
 }

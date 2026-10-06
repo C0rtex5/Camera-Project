@@ -1,5 +1,20 @@
+# One instance per host, from any checkout.
+#
+# The project name below is pinned so that `docker compose up -d` run from a
+# different directory, a second clone, or with a different project name still
+# addresses the SAME stack. Before this was pinned, the project name came from
+# the checkout directory, so two checkouts produced two stacks with two
+# containers, two volumes and two hosts of port 8000 — each with
+# `restart: unless-stopped`, so they took turns owning the port and the
+# deployment looked like it was flapping. See deploy/SINGLE_INSTANCE.md.
+name: sentinelzone
+
 services:
   sentinel:
+    # A fixed container name makes a second instance fail loudly at create time
+    # ("container name /sentinelzone is already in use") instead of quietly
+    # starting a duplicate that fights over the host port.
+    container_name: sentinelzone
     build: .
     image: sentinelzone-ai:production
     restart: unless-stopped
@@ -33,3 +48,6 @@ services:
         max-file: "3"
 volumes:
   sentinel-data:
+    # Explicit volume name so the persisted camera setup, surveys and manifests
+    # keep one identity even if the checkout directory is renamed or moved.
+    name: sentinelzone-state
