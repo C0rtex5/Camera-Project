@@ -1,0 +1,15 @@
+{
+  "camera": {
+    "site_id": "SITE-01",
+    "camera_id": "gate",
+    "url_env": "CAMERA_GATE_RTSP",
+    "width": 1920,
+    "height": 1080,
+    "homography": {
+      "K": null,
+      "dist": null
+    }
+  },
+  "fit_points": [],
+  "check_points": []
+}

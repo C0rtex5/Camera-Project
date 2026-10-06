@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Camera setup · SentinelZone</title>
+  <link rel="stylesheet" href="/assets/dashboard.css">
+</head>
+<body class="setup-page">
+  <header>
+    <div class="brand-title">SENTINELZONE-AI <span>// Predictive Dynamic Spatial Safety</span></div>
+    <nav><a href="/">Detection hub</a><span class="badge">Camera setup</span></nav>
+  </header>
+  <main>
+    <a href="/">Back to monitoring</a>
+    <h1>Camera setup <span class="muted">(optional)</span></h1>
+    <p class="muted">You can explore demo scenarios and review the application without configuring a camera. Complete this page only when you are ready for live monitoring. Save what you know now and finish later.</p>
+    <p><a class="ctrl-btn" href="/">Skip setup — explore the demo</a></p>
+
+    <form id="form">
+      <fieldset id="fields" disabled style="border:0;padding:0">
+        <section>
+          <h2>Camera connection</h2>
+          <div class="grid">
+            <div><label for="camera_id">Camera name / ID</label><input id="camera_id" maxlength="64"></div>
+            <div><label for="site_id">Site name</label><input id="site_id" maxlength="64"></div>
+            <div><label for="location">Physical location</label><input id="location" maxlength="160" placeholder="North Yard / Gate 3"></div>
+            <div><label for="host">Camera IP or hostname</label><input id="host" maxlength="255" placeholder="192.168.10.21"></div>
+            <div><label for="rtsp_port">RTSP port</label><input id="rtsp_port" type="number" min="1" max="65535" placeholder="554"></div>
+            <div><label for="stream_path">Stream path</label><input id="stream_path" maxlength="512" placeholder="Streaming/Channels/101"></div>
+            <div><label for="access_path">Access path</label><input id="access_path" maxlength="64" placeholder="direct, vpn, or ssh-tunnel"></div>
+          </div>
+          <p class="muted">These inventory fields identify the camera for SEC-01. The host, port, and path are composed into the RTSP endpoint below; do not put credentials in the path.</p>
+
+          <label for="ssh_tunnel">SSH tunnel to test server (optional)</label>
+          <input id="ssh_tunnel" placeholder="ssh -p PORT username@server" autocomplete="off">
+          <p class="muted">Route this camera through the test server. Enter the camera stream address as reachable from that server. Leave blank for a direct connection. The tunnel starts with monitoring; saving only stores the details. SSH uses a private key and verified host file configured on the application server, separately from the camera password.</p>
+          <div class="grid">
+            <div><label for="ssh_key_file">SSH private-key file path</label><input id="ssh_key_file" autocomplete="off"></div>
+            <div><label for="ssh_known_hosts">Verified SSH known-hosts file path</label><input id="ssh_known_hosts" autocomplete="off"></div>
+          </div>
+          <p class="muted">Paths refer to files on the machine running this application (inside the container when using Docker). Enter paths, not key contents. Leave blank to use the server's configured SSH files. The camera password below authenticates to the camera, not to SSH.</p>
+
+          <label for="rtsp_url">Full RTSP address (legacy/advanced)</label>
+          <input id="rtsp_url" placeholder="Leave blank when using host, port, and stream path" autocomplete="off">
+          <p class="muted">Use the structured inventory fields above when possible. A full address is supported for existing camera configurations; credentials must remain in the separate fields.</p>
+          <p id="rtsp-preview" class="muted">Derived RTSP endpoint: not configured</p>
+          <div class="grid">
+            <div><label for="username">Camera username</label><input id="username" autocomplete="off"></div>
+            <div><label for="password">Camera password</label><input id="password" type="password" autocomplete="new-password"><p id="password-note" class="muted">No password saved.</p></div>
+          </div>
+          <label><input id="clear-password" type="checkbox"> Remove saved camera password</label>
+          <p class="muted">Credentials are stored privately in the server’s persistent data volume. Saved passwords are never returned to this page.</p>
+        </section>
+
+        <section>
+          <h2>Stream and calibration <span class="muted">— can be completed later</span></h2>
+          <div class="grid">
+            <div><label for="width">Stream width (pixels)</label><input id="width" type="number" min="1" max="16384"></div>
+            <div><label for="height">Stream height (pixels)</label><input id="height" type="number" min="1" max="16384"></div>
+            <div><label for="inference_fps">Analysis frames per second</label><input id="inference_fps" type="number" value="5" min="0.1" max="30" step="0.1"></div>
+            <div><label for="stale_after_seconds">Freshness limit (seconds)</label><input id="stale_after_seconds" type="number" value="1" min="0.1" max="30" step="0.1"></div>
+          </div>
+          <label for="homography">Measured calibration (JSON)</label>
+          <textarea id="homography" rows="5" placeholder='{"K": [...], "dist": [...], "H": [...]}'></textarea>
+          <p class="muted">Paste the homography object from your camera calibration report. Leave blank until measured; example calibration is not suitable for live monitoring.</p>
+        </section>
+
+        <button type="submit" id="save">Save setup</button>
+        <button type="button" id="check">Check connection</button>
+        <button type="button" id="start">Start monitoring</button>
+        <p class="muted">Check connection tests SSH and receives one camera frame without saving changes, calibration or AI models. Start monitoring also requires measured calibration and AI models.</p>
+        <p id="connection-result" role="status"></p>
+      </fieldset>
+    </form>
+
+    <section id="survey-section">
+      <h2>PoC camera survey</h2>
+      <p class="muted">Use the current connection fields to validate each candidate camera. A survey attempt records the result, frame resolution, objective image-quality measurements, and any network or connectivity block. It does not make the camera the active setup.</p>
+      <button type="button" id="survey" class="ctrl-btn" disabled>Validate current camera and log survey</button>
+      <p id="survey-result" role="status"></p>
+      <details>
+        <summary>Validate an IT-provided candidate list (JSON)</summary>
+        <p class="muted">Submit up to 20 candidates for sequential validation. Each candidate uses camera_id, site_id, location, host, rtsp_port, stream_path, access_path, and optional username/password or ssh_tunnel. Passwords are used in memory only and are never written to the survey record.</p>
+        <textarea id="survey-batch" rows="6" placeholder='[{"camera_id":"CAM-01","location":"North Yard / Gate 3","host":"192.168.10.21","rtsp_port":554,"stream_path":"Streaming/Channels/101","access_path":"direct"}]'></textarea>
+        <button type="button" id="survey-batch-run" class="ctrl-btn" disabled>Validate candidate list</button>
+        <p id="survey-batch-result" class="muted" role="status"></p>
+      </details>
+      <p><a id="survey-report" class="ctrl-btn" href="/api/v1/setup/survey/report.md" target="_blank" rel="noopener">Open selected-camera report</a></p>
+      <div id="survey-history" aria-live="polite"></div>
+    </section>
+
+    <section>
+      <h2>Setup status</h2>
+      <p id="message" role="status">Loading camera setup…</p>
+      <ul id="missing"></ul>
+      <p class="muted">Saving does not interrupt active monitoring. Restart the service to apply changes to an already running camera.</p>
+    </section>
+  </main>
+
+  <script>
+    const el = id => document.getElementById(id);
+    const names = ['camera_id','site_id','location','host','rtsp_port','stream_path','access_path','ssh_tunnel','ssh_key_file','ssh_known_hosts','rtsp_url','username','width','height','inference_fps','stale_after_seconds'];
+    async function api(method, path, payload) {
+      const response = await fetch('/api/v1/setup/camera' + path, {
+        method, headers: {'Content-Type':'application/json'},
+        body: payload ? JSON.stringify(payload) : undefined,
+        cache: 'no-store', signal: AbortSignal.timeout(45000)
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Check the setup fields.');
+      return data;
+    }
+    async function surveyApi(method, path, payload) {
+      const response = await fetch('/api/v1/setup/survey' + path, {
+        method, headers: {'Content-Type':'application/json'},
+        body: payload ? JSON.stringify(payload) : undefined,
+        cache: 'no-store', signal: AbortSignal.timeout(45000)
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Check the survey fields.');
+      return data;
+    }
+    function endpointPreview() {
+      const host = el('host').value.trim();
+      const port = el('rtsp_port').value.trim();
+      const path = el('stream_path').value.trim();
+      if (host && port && path) return `rtsp://${host}:${port}/${path.replace(/^\/+/, '')}`;
+      if (el('rtsp_url').value.trim()) return el('rtsp_url').value.trim();
+      return 'not configured';
+    }
+    function updateEndpointPreview() { el('rtsp-preview').textContent = 'Derived RTSP endpoint: ' + endpointPreview(); }
+    function show(data) {
+      for (const name of names) el(name).value = data[name] ?? '';
+      el('homography').value = data.homography ? JSON.stringify(data.homography, null, 2) : '';
+      updateEndpointPreview();
+      el('password').value = '';
+      el('clear-password').checked = false;
+      el('password-note').textContent = data.password_saved ? 'Password saved. Leave blank to keep it.' : 'No password saved.';
+      el('missing').replaceChildren();
+      for (const item of data.missing) { const li = document.createElement('li'); li.textContent = item; el('missing').appendChild(li); }
+      el('start').disabled = !!data.missing.length || data.monitoring_active;
+      el('message').textContent = data.monitoring_active ? 'Monitoring is active. Saved changes apply after restart.' : data.setup_error || (data.missing.length ? 'Setup is incomplete. You can save now and return later.' : 'Ready to attempt monitoring.');
+    }
+    function draftFromForm(connectionOnly = false) {
+      const draft = {};
+      for (const name of names) draft[name] = ['rtsp_port','width','height','inference_fps','stale_after_seconds'].includes(name) ? (el(name).value ? Number(el(name).value) : null) : el(name).value.trim();
+      if (connectionOnly) {
+        for (const name of ['width','height','inference_fps','stale_after_seconds']) delete draft[name];
+      } else {
+        try { draft.homography = el('homography').value.trim() ? JSON.parse(el('homography').value) : null; }
+        catch { throw new Error('Measured calibration must be valid JSON, or leave it blank for now.'); }
+      }
+      if (el('clear-password').checked) draft.password = '';
+      else if (el('password').value) draft.password = el('password').value;
+      return draft;
+    }
+    function qualityText(result) {
+      const quality = result.quality;
+      if (!quality) return 'Image quality was not measured.';
+      const notes = quality.notes?.length ? ` Notes: ${quality.notes.join('; ')}` : '';
+      return `Quality ${quality.status}; brightness ${quality.brightness_mean}; contrast ${quality.contrast_std}; sharpness ${quality.sharpness_laplacian}.${notes}`;
+    }
+    function showCheckResult(result) {
+      const resolution = result.width && result.height ? ` Frame size: ${result.width} × ${result.height}.` : '';
+      el('connection-result').textContent = (result.message || 'Connection check completed.') + resolution + ' ' + qualityText(result);
+    }
+    function renderSurvey(data) {
+      const history = el('survey-history');
+      history.replaceChildren();
+      const selected = data.records.find(record => record.selected);
+      const summary = document.createElement('p');
+      summary.className = 'muted';
+      summary.textContent = selected ? `Selected camera: ${selected.camera_id} — ${selected.location || 'location not recorded'} · ${selected.host || 'host not recorded'}:${selected.rtsp_port || '—'} · ${selected.rtsp_endpoint || 'endpoint not recorded'}.` : 'No camera has been selected for the PoC yet.';
+      history.appendChild(summary);
+      const status = document.createElement('p');
+      status.className = data.sec01_status?.complete ? 'badge badge-gpu' : 'muted';
+      status.textContent = data.sec01_status?.complete ? 'SEC-01 ready: inventory, stream evidence, and selection complete' : `SEC-01 open: ${(data.sec01_status?.missing || []).join('; ')}`;
+      history.appendChild(status);
+      for (const record of data.records) {
+        const result = record.result || {};
+        const card = document.createElement('article');
+        card.className = 'survey-record' + (record.selected ? ' selected' : '');
+        const title = document.createElement('h3');
+        title.textContent = `${record.camera_id} · ${record.site_id}${record.selected ? ' · SELECTED' : ''}`;
+        const endpoint = document.createElement('p');
+        endpoint.className = 'muted';
+        endpoint.textContent = `${record.location || 'Location not recorded'} · ${record.host || 'host not recorded'}:${record.rtsp_port || '—'} · ${record.stream_path || 'path not recorded'} · ${record.rtsp_endpoint || 'endpoint not recorded'}`;
+        const outcome = document.createElement('p');
+        outcome.textContent = (result.ok ? 'Validated: ' : 'Blocked: ') + (result.message || 'No message');
+        const quality = document.createElement('p');
+        quality.className = 'muted';
+        const tcp = result.tcp_reachable === true ? 'TCP reachable' : result.tcp_reachable === false ? 'TCP unreachable' : 'TCP not measured';
+        quality.textContent = result.ok ? `${result.width} × ${result.height}. ${qualityText(result)} ${tcp}.` : `Blocker code: ${result.blocker || 'unknown'}. ${tcp}.`;
+        const disposition = document.createElement('p');
+        disposition.className = 'muted';
+        disposition.textContent = `Disposition: ${record.disposition?.status || 'open'}${record.disposition?.note ? ' — ' + record.disposition.note : ''}`;
+        card.append(title, endpoint, outcome, quality, disposition);
+        if (!result.ok && record.disposition?.status === 'open') {
+          const review = document.createElement('button');
+          review.type = 'button'; review.className = 'ctrl-btn'; review.textContent = 'Mark block reviewed';
+          review.onclick = async () => {
+            review.disabled = true;
+            try { await surveyApi('POST', '/disposition', {record_id: record.record_id, status: 'reviewed', note: 'Reviewed from setup UI'}); await loadSurvey(); }
+            catch (error) { el('survey-result').textContent = error.message; review.disabled = false; }
+          };
+          card.appendChild(review);
+        }
+        if (result.ok && !record.selected) {
+          const select = document.createElement('button');
+          select.type = 'button'; select.className = 'ctrl-btn'; select.textContent = 'Select for PoC';
+          select.onclick = async () => {
+            select.disabled = true;
+            try { await surveyApi('POST', '/select', {record_id: record.record_id}); await loadSurvey(); }
+            catch (error) { el('survey-result').textContent = error.message; select.disabled = false; }
+          };
+          card.appendChild(select);
+        }
+        history.appendChild(card);
+      }
+    }
+    async function loadSurvey() {
+      try { renderSurvey(await surveyApi('GET', '')); }
+      catch (error) { el('survey-result').textContent = error.message; }
+    }
+    async function loadSetup() {
+      try {
+        const data = await api('GET', '');
+        show(data);
+        if (!data.rtsp_url && !data.ssh_tunnel) { if (data.camera_id === 'gate') el('camera_id').value = ''; if (data.site_id === 'SITE-01') el('site_id').value = ''; }
+        el('fields').disabled = false; el('survey').disabled = false; el('survey-batch-run').disabled = false;
+      } catch (error) { el('fields').disabled = true; el('message').textContent = error.message; }
+      await loadSurvey();
+    }
+    loadSetup();
+    el('form').onsubmit = async event => {
+      event.preventDefault();
+      try { show(await api('PUT', '', draftFromForm())); el('message').textContent = 'Setup saved. ' + el('message').textContent; }
+      catch (error) { el('missing').replaceChildren(); el('start').disabled = true; el('message').textContent = 'Setup was not saved. ' + error.message; }
+    };
+    el('check').onclick = async () => {
+      el('check').disabled = true; el('connection-result').textContent = 'Checking server and camera connection…';
+      try { showCheckResult(await api('POST', '/check', draftFromForm(true))); }
+      catch (error) { el('connection-result').textContent = error.message; }
+      finally { el('check').disabled = false; }
+    };
+    el('survey').onclick = async () => {
+      el('survey').disabled = true; el('survey-result').textContent = 'Validating the camera and recording the result…';
+      try {
+        const response = await surveyApi('POST', '', draftFromForm(true));
+        const result = response.record.result;
+        el('survey-result').textContent = result.ok ? `Survey recorded: ${qualityText(result)}` : `Survey recorded a connectivity block (${result.blocker || 'unknown'}).`;
+        await loadSurvey();
+      } catch (error) { el('survey-result').textContent = error.message; }
+      finally { el('survey').disabled = false; }
+    };
+    el('survey-batch-run').onclick = async () => {
+      el('survey-batch-run').disabled = true; el('survey-batch-result').textContent = 'Validating candidate list sequentially…';
+      try {
+        const candidates = JSON.parse(el('survey-batch').value);
+        if (!Array.isArray(candidates) || candidates.length < 1 || candidates.length > 20) throw new Error('Provide a JSON array containing 1 to 20 candidates.');
+        const response = await surveyApi('POST', '/batch', {candidates});
+        el('survey-batch-result').textContent = `${response.records.length} candidate(s) recorded; ${response.errors.length} need attention.`;
+        await loadSurvey();
+      } catch (error) { el('survey-batch-result').textContent = error.message; }
+      finally { el('survey-batch-run').disabled = false; }
+    };
+    el('form').oninput = () => { updateEndpointPreview(); el('start').disabled = true; el('connection-result').textContent = ''; el('message').textContent = 'Unsaved changes. Save setup to update monitoring readiness, or check the connection now.'; el('missing').replaceChildren(); };
+    el('start').onclick = async () => { el('start').disabled = true; el('message').textContent = 'Starting monitoring…'; try { await api('POST', '/start'); show(await api('GET', '')); } catch (error) { el('message').textContent = error.message; el('start').disabled = false; } };
+  </script>
+</main>
+</body>
+</html>

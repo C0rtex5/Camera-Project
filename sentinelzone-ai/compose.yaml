@@ -1,0 +1,35 @@
+services:
+  sentinel:
+    build: .
+    image: sentinelzone-ai:production
+    restart: unless-stopped
+    init: true
+    ports:
+      - "127.0.0.1:8000:8000"
+    # Optional deployment overrides: docker compose --env-file .env.production -f compose.yaml up -d
+    environment:
+      SENTINEL_MODE: production
+      SENTINEL_CAMERA_CONFIG: ${SENTINEL_CAMERA_CONFIG:-}
+      SENTINEL_SETUP_FILE: /opt/sentinelzone/data/setup/camera.json
+      SENTINEL_DETECTOR_WEIGHTS: /models/detector.pt
+      SENTINEL_GNN_CHECKPOINT: /models/forecast.pt
+      SENTINEL_DEVICE: ${SENTINEL_DEVICE:-auto}
+      SENTINEL_CPU_THREADS: "2"
+      OMP_NUM_THREADS: "2"
+      CAMERA_GATE_RTSP: ${CAMERA_GATE_RTSP:-}
+    volumes:
+      - ./weights:/models:ro
+      - sentinel-data:/opt/sentinelzone/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+volumes:
+  sentinel-data:

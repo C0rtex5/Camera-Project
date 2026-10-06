@@ -1,0 +1,7 @@
+services:
+  sentinel:
+    build:
+      context: .
+      dockerfile: Dockerfile.gpu
+    image: sentinelzone-ai:production-gpu
+    gpus: all

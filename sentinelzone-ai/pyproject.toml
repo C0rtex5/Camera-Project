@@ -1,0 +1,34 @@
+[project]
+name = "sentinelzone-ai"
+version = "3.0.0"
+description = "Predictive Dynamic Spatial Work-Zone Safety System"
+authors = [{ name = "SentinelZone Engineering Team" }]
+requires-python = ">=3.11"
+dynamic = ["dependencies"]
+
+[project.optional-dependencies]
+graph = ["torch-geometric>=2.5.3"]
+bim = ["ifcopenshell>=0.7.0"]
+training = ["roboflow>=1.1.30"]
+tensorrt = ["tensorrt>=10.0.0"]
+test = ["httpx==0.28.1"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements-runtime.txt"]}
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+
+[tool.setuptools.package-data]
+"src" = [
+    "dashboard/*.html",
+    "dashboard/assets/*.css",
+    "dashboard/assets/*.js",
+    "dashboard/assets/vendor/*",
+    "demo_assets/*/manifest.json",
+    "demo_assets/*/*.jpg",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

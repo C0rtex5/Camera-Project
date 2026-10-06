@@ -1,0 +1,10 @@
+{
+  "event_id": "INC-TEST-001",
+  "verdict": "TRUE_POSITIVE",
+  "confidence": 1.0,
+  "spotter_verified": true,
+  "worker_awareness_observed": false,
+  "root_cause_summary": "Test automated verification",
+  "retraining_priority": "LOW",
+  "recommended_mitigation": "Automated verification"
+}

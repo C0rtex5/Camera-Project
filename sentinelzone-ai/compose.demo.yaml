@@ -1,0 +1,7 @@
+# Optional additional curated playback bundles; no extra inference process.
+services:
+  sentinel:
+    environment:
+      SENTINEL_DEMO_DIR: /demo
+    volumes:
+      - ./demo-library:/demo:ro
