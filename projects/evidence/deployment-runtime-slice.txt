@@ -1,0 +1,9 @@
+=== deployment-runtime ===
+........................
+----------------------------------------------------------------------
+Ran 24 tests in 1.750s
+
+OK
+  PASS - python: run=24 failures=0 errors=0 skipped=0; node: no node tests owned
+
+RESULT: 1/1 sub-project slices passed

@@ -165,7 +165,7 @@ def audit(instances: list[Instance]) -> tuple[list[str], list[str]]:
                 f"({', '.join(u.short_id for u in users)}); only one can hold it at a time — "
                 "that is the alternation."
             )
-        elif users[0].returns_by_itself and not users[0].running:
+        elif len(instances) > 1 and users[0].returns_by_itself and not users[0].running:
             warnings.append(
                 f"{users[0].short_id} is not running but publishes {port} with restart policy "
                 f"'{users[0].restart_policy}': it can take the port the moment the other one stops."

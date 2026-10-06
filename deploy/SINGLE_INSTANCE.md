@@ -59,6 +59,24 @@ sudo ss -ltnp '( sport = :8000 )'
 
 ## Fix
 
+**One command, dry run by default.** `scripts/docker_single_instance_fix.py` uses the audit above,
+keeps the instance you name, and executes nothing unless you pass `--apply`:
+
+```bash
+python scripts/docker_single_instance_fix.py                                   # show the plan only
+python scripts/docker_single_instance_fix.py --keep camera-project-sentinel-1 --apply
+python scripts/docker_single_instance_fix.py --keep camera-project-sentinel-1 --apply --stop-supervisor
+```
+
+It always clears the restart policy **before** removing the container (that ordering is the part
+people get wrong — `docker rm -f` on a container with `restart: always` while its supervisor is still
+active simply recreates it), never touches the container given to `--keep`, optionally runs
+`docker compose -p <project> … down` for a duplicate that is itself a Compose stack
+(`--stop-supervisor`), and re-audits the host afterwards so a container that comes back is reported
+instead of being declared fixed.
+
+The manual equivalent, if you prefer to type it yourself:
+
 1. **Pick the keeper** — normally the Compose stack, because it owns the persistent volume and the
    documented upgrade path. In the observed case that is `camera-project-sentinel-1` (`Up (healthy)`).
 2. **Neutralise the duplicate before removing it.** Removing a container that has
