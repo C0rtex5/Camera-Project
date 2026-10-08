@@ -1,8 +1,0 @@
-# Optional SSH key and verified server fingerprint for a camera tunnel.
-services:
-  sentinel:
-    environment:
-      SENTINEL_SSH_KEY_FILE: /run/sentinel-ssh/id_ed25519
-      SENTINEL_SSH_KNOWN_HOSTS: /run/sentinel-ssh/known_hosts
-    volumes:
-      - ./ssh:/run/sentinel-ssh:ro
