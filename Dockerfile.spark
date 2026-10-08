@@ -1,18 +1,21 @@
-FROM python:3.12.15-slim-bookworm
-ARG TORCH_INDEX=https://download.pytorch.org/whl/cpu
+# NVIDIA's documented DGX Spark ARM64 / GB10 stack (Python 3.12, CUDA 13).
+FROM nvcr.io/nvidia/pytorch:25.09-py3
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 \
     SENTINEL_DATA_DIR=/var/lib/sentinel SENTINEL_WEIGHTS=/opt/sentinel/yolov8n.pt \
     SENTINEL_DEVICE=auto YOLO_CONFIG_DIR=/tmp/ultralytics MPLCONFIGDIR=/tmp/matplotlib \
     OPENCV_FFMPEG_LOGLEVEL=-8 OPENCV_LOG_LEVEL=SILENT
 WORKDIR /opt/sentinel
-RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 ca-certificates \
+RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 ca-certificates python3-venv \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --uid 10001 --create-home sentinel \
     && mkdir -p /var/lib/sentinel /opt/sentinel/data/test_videos \
     && chown -R sentinel:sentinel /var/lib/sentinel /opt/sentinel
-COPY requirements-hub.txt requirements-hub.lock ./
-RUN pip install --no-cache-dir torch==2.5.1 torchvision==0.20.1 --index-url ${TORCH_INDEX} \
-    && pip install --no-cache-dir -r requirements-hub.lock
+# Keep NVIDIA's prebuilt Torch/Torchvision and their dependencies intact.
+RUN python3 -m venv --system-site-packages /opt/sentinel-env
+ENV PATH=/opt/sentinel-env/bin:$PATH
+COPY requirements-spark.lock ./
+RUN PIP_CONSTRAINT= python -m pip install --no-cache-dir --no-deps -r requirements-spark.lock \
+    && python -c "import cv2, torch, torchvision, fastapi, ultralytics; assert torch.version.cuda is not None"
 COPY --chown=sentinel:sentinel src ./src
 COPY --chown=sentinel:sentinel config ./config
 COPY --chown=sentinel:sentinel scripts ./scripts

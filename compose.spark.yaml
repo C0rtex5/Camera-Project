@@ -1,0 +1,6 @@
+# Append to CPU or GPU Compose on DGX Spark / other ARM64 Blackwell hosts.
+services:
+  sentinel:
+    image: camera-project:spark
+    build:
+      dockerfile: Dockerfile.spark

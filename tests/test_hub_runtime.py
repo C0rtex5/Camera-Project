@@ -218,17 +218,4 @@ class TestCaptureAndStorage(unittest.TestCase):
             self.hub.evidence_queue.put_nowait(('overflow',))
 
 
-class TestDockerLauncher(unittest.TestCase):
-    def test_gpu_container_start_failure_selects_cpu(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            logfile = root / 'calls'
-            docker = root / 'docker'
-            docker.write_text('#!/usr/bin/env bash\nprintf "%s\\n" "$*" >> "$TEST_CALLS"\nif [[ " $* " == *" run "* ]]; then exit 1; fi\nexit 0\n')
-            nvidia = root / 'nvidia-smi'; nvidia.write_text('#!/usr/bin/env bash\nexit 0\n')
-            docker.chmod(0o755); nvidia.chmod(0o755)
-            env = {**os.environ, 'PATH': str(root) + ':' + os.environ['PATH'], 'TEST_CALLS': str(logfile)}
-            response = subprocess.run(['bash', 'scripts/start-hub.sh', 'auto'], env=env, capture_output=True, text=True)
-            self.assertEqual(response.returncode, 0, response.stderr)
-            self.assertIn('compose -f compose.yaml up -d --build', logfile.read_text())
-            self.assertIn('Starting CPU', response.stderr)
+# Launcher scenarios are covered by tests/test_deploy.py.

@@ -69,9 +69,18 @@ class Camera(BaseModel):
     @field_validator('rtsp_url')
     @classmethod
     def source(cls, value):
+        value = value.strip()
+        if any(ord(c) <= 32 or ord(c) == 127 for c in value):
+            raise ValueError('RTSP URL cannot contain whitespace or control characters; encode spaces as %20')
         url = urlsplit(value)
         if url.scheme not in ('rtsp', 'rtsps') or not url.hostname or url.username or url.password:
-            raise ValueError('Use RTSP without embedded credentials; select a credential secret')
+            raise ValueError('Use RTSP without embedded credentials; enter camera username and password separately')
+        try:
+            port = url.port
+        except ValueError:
+            raise ValueError('Invalid RTSP port') from None
+        if port is not None and port == 0:
+            raise ValueError('Invalid RTSP port')
         return value
 
     @field_validator('credential_secret')

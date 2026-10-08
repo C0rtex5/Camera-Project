@@ -1,6 +1,8 @@
 services:
-  hub:
-    image: sentinelzone-hub:gpu
+  sentinel:
+    environment:
+      SENTINEL_DEVICE: auto
+    image: camera-project:gpu
     build:
       args:
         TORCH_INDEX: https://download.pytorch.org/whl/cu124

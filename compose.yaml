@@ -1,23 +1,24 @@
+name: sentinelzone
 services:
-  hub:
-    image: sentinelzone-hub:cpu
+  sentinel:
+    container_name: sentinelzone
+    image: camera-project:cpu
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "${SENTINEL_BIND_ADDRESS:-0.0.0.0}:1221:8000"
+      - "${SENTINEL_BIND_ADDRESS:-127.0.0.1}:${SENTINEL_PORT:-1221}:8000"
     environment:
-      SENTINEL_DEVICE: auto
-      SENTINEL_AUTH_REQUIRED: "${SENTINEL_AUTH_REQUIRED:-false}"
+      SENTINEL_DEVICE: "${SENTINEL_DEVICE:-auto}"
+      SENTINEL_AUTH_REQUIRED: "false"
       SENTINEL_DATA_DIR: /var/lib/sentinel
-      SENTINEL_COOKIE_SECURE: "${SENTINEL_COOKIE_SECURE:-false}"
-      SENTINEL_ORIGIN: "${SENTINEL_ORIGIN:-http://localhost:8000}"
+      SENTINEL_ORIGIN: "${SENTINEL_ORIGIN:-http://localhost:1221}"
       SENTINEL_RETENTION_DAYS: "${SENTINEL_RETENTION_DAYS:-7}"
       SENTINEL_EVIDENCE_MAX_BYTES: "${SENTINEL_EVIDENCE_MAX_BYTES:-2147483648}"
       SENTINEL_ENABLE_DEMO: "${SENTINEL_ENABLE_DEMO:-false}"
+      OMP_NUM_THREADS: "2"
     volumes:
       - hub-data:/var/lib/sentinel
-      - ./deploy/secrets:/run/secrets:ro
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=256m
@@ -33,3 +34,4 @@ services:
         max-file: "3"
 volumes:
   hub-data:
+    name: camera-project-hub-data

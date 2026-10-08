@@ -36,6 +36,7 @@ class DeviceManager:
         self.device = 'unavailable'
         self.reason = None
         self.generation = 0
+        self.gpu_diagnostic = None
         self.gpu_available = gpu_available or self._gpu_available
 
     @staticmethod
@@ -57,11 +58,14 @@ class DeviceManager:
             self.model = None
             self.device = 'unavailable'
             self.reason = None
+            self.gpu_diagnostic = None
             self.generation += 1
             try:
                 if self.mode != 'cpu' and self.gpu_available():
                     self._load('cuda:0')
+                    self.gpu_diagnostic = 'GPU ativa; inferência validada.'
                     return
+                self.gpu_diagnostic = self._gpu_diagnostic()
                 if self.mode == 'cuda':
                     self.reason = 'Requested GPU is unavailable'
                     return
@@ -95,8 +99,27 @@ class DeviceManager:
                 # Drop the failed frame. Each worker resets state on generation change.
                 raise RuntimeError('Inference failed; waiting for a fresh frame') from None
 
+    @staticmethod
+    def _gpu_diagnostic():
+        try:
+            import torch
+            if torch.version.cuda is None:
+                return 'Esta imagem contém PyTorch CPU. Na DGX Spark, reinicie usando a imagem Spark pelo launcher.'
+            if not torch.cuda.is_available():
+                return 'CUDA não está acessível. Verifique o runtime NVIDIA e os dispositivos liberados ao container.'
+            return 'GPU disponível; modo CPU selecionado na configuração.'
+        except Exception:
+            return 'Não foi possível verificar a disponibilidade de CUDA.'
+
+    def retry_gpu(self):
+        # An explicit operator action revokes forced CPU and requests auto fallback.
+        with self.lock:
+            self.mode = 'auto'
+        self.initialize()
+
     def status(self):
-        return {'device': self.device, 'mode': self.mode, 'degradation': self.reason, 'generation': self.generation}
+        return {'device': self.device, 'mode': self.mode, 'degradation': self.reason,
+                'generation': self.generation, 'gpu_diagnostic': self.gpu_diagnostic}
 
 
 class CameraWorker:

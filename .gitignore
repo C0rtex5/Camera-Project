@@ -68,3 +68,10 @@ pilot-results*.jsonl
 
 # Managed local Python runtime and package cache
 .runtime/
+
+# Private deployment configuration and copied local state
+.env.*
+!.env.production.example
+**/*.sqlite3*
+**/*.db
+config/data/hub/

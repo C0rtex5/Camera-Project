@@ -66,7 +66,7 @@ def create_app(store=None, hub=None, authentication_required=None):
             origin = request.headers.get('origin')
             allowed = os.getenv('SENTINEL_ORIGIN', str(request.base_url).rstrip('/'))
             if origin and origin != allowed:
-                return JSONResponse({'detail': 'Origin denied'}, status_code=403)
+                return JSONResponse({'detail': 'Origem não permitida. Ajuste SENTINEL_ORIGIN para o endereço e a porta usados para abrir este painel.'}, status_code=403)
             try:
                 if int(request.headers.get('content-length', '0')) > 1024 * 1024:
                     return JSONResponse({'detail': 'Request too large'}, status_code=413)
@@ -93,7 +93,7 @@ def create_app(store=None, hub=None, authentication_required=None):
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['Referrer-Policy'] = 'same-origin'
         response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self'; frame-ancestors 'none'"
-        if path.startswith('/api/') or path.startswith('/demo'):
+        if path == '/' or path.startswith('/api/') or path.startswith('/demo'):
             response.headers['Cache-Control'] = 'no-store'
         return response
 
@@ -161,6 +161,26 @@ def create_app(store=None, hub=None, authentication_required=None):
             configs = [{k: v for k, v in c.items() if k not in ('rtsp_url', 'credential_secret')} for c in configs]
         return {'cameras': configs, 'statuses': app.state.hub.statuses(), 'compute': app.state.hub.device.status(),
                 'storage_error': app.state.hub.storage_error, 'demo_enabled': os.getenv('SENTINEL_ENABLE_DEMO', 'false').lower() == 'true'}
+
+    @app.post('/api/v1/cameras/check')
+    def check_camera(config: CameraConnection, request: Request):
+        require(request, ('administrator',))
+        from src.hub.rtsp_check import check_rtsp
+        credentials = None
+        if not config.clear_credentials:
+            if config.rtsp_username is not None:
+                credentials = {'username': config.rtsp_username.get_secret_value(), 'password': config.rtsp_password.get_secret_value()}
+            else:
+                credentials = app.state.store.camera_credentials(config.camera_id)
+                if credentials is None and config.credential_secret:
+                    try:
+                        path = Path(os.getenv('SENTINEL_SECRET_DIR', '/run/secrets')) / config.credential_secret
+                        credentials = json.loads(path.read_text())
+                        if not isinstance(credentials.get('username'), str) or not isinstance(credentials.get('password'), str):
+                            raise ValueError
+                    except (OSError, ValueError, AttributeError):
+                        return {'ok': False, 'code': 'credential_file_invalid', 'message': 'Arquivo de credenciais indisponível ou inválido.', 'rtsp_status': None}
+        return check_rtsp(config.rtsp_url, credentials)
 
     @app.put('/api/v1/cameras/{camera_id}')
     def save_camera(camera_id: str, config: CameraConnection, request: Request):
@@ -303,7 +323,7 @@ def create_app(store=None, hub=None, authentication_required=None):
     @app.post('/api/v1/compute/retry')
     def retry(request: Request):
         actor = require(request, ('administrator',))
-        app.state.hub.device.initialize()
+        app.state.hub.device.retry_gpu()
         with app.state.store.transaction() as db:
             app.state.store.audit(db, actor, 'compute_reinitialized', app.state.hub.device.status())
         return app.state.hub.device.status()
