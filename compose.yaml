@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "${SENTINEL_BIND_ADDRESS:-127.0.0.1}:${SENTINEL_PORT:-1221}:8000"
+      - "${SENTINEL_BIND_ADDRESS:-0.0.0.0}:${SENTINEL_PORT:-1221}:8000"
     environment:
       SENTINEL_DEVICE: "${SENTINEL_DEVICE:-auto}"
       SENTINEL_AUTH_REQUIRED: "false"
