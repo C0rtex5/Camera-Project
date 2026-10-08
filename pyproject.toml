@@ -1,0 +1,30 @@
+[project]
+name = "sentinelzone-ai"
+version = "5.0.0"
+description = "Offline industrial camera hub with predictive spatial monitoring"
+authors = [{ name = "SentinelZone Engineering Team" }]
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "fastapi==0.115.6", "uvicorn==0.34.0", "pydantic==2.10.4",
+    "numpy==1.26.4", "opencv-python==4.10.0.84", "shapely==2.0.6",
+    "torch==2.5.1", "torchvision==0.20.1", "ultralytics==8.3.58",
+    "pillow==11.1.0", "PyYAML==6.0.2", "scipy==1.14.1", "httpx==0.28.1",
+    "langgraph==0.2.60", "langchain-core==0.3.29", "langchain-openai==0.2.14",
+    "langchain-anthropic==0.3.1", "paho-mqtt==2.1.0"
+]
+
+[project.optional-dependencies]
+training = ["roboflow>=1.1.30", "torch-geometric>=2.5.3"]
+bim = ["ifcopenshell>=0.7.0"]
+tensorrt = ["tensorrt>=10.0.0"]
+test = ["pytest==8.3.4"]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+
+[tool.setuptools.package-data]
+"src.dashboard" = ["*.html", "assets/*"]

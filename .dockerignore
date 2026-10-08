@@ -1,0 +1,15 @@
+.git
+.agents
+.codex
+.aws
+.env*
+.venv
+__pycache__
+**/__pycache__
+*.pyc
+data
+runs
+weights
+deploy/secrets
+*.jpg
+*.log

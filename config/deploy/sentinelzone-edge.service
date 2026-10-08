@@ -1,0 +1,19 @@
+[Unit]
+Description=SentinelZone industrial camera hub (Docker Compose)
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/sentinelzone
+ExecStart=/bin/bash scripts/start-hub.sh auto
+ExecStop=/usr/bin/docker compose -f compose.yaml stop hub
+TimeoutStartSec=0
+TimeoutStopSec=60
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

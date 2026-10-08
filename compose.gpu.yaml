@@ -1,0 +1,13 @@
+services:
+  hub:
+    image: sentinelzone-hub:gpu
+    build:
+      args:
+        TORCH_INDEX: https://download.pytorch.org/whl/cu124
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SentinelZone-AI // Predictive Dynamic Spatial Safety & Near-Miss Anticipation Platform</title>
+  <style>
+    :root {
+      --bg-dark: #0a0c0e;
+      --panel-bg: #111417;
+      --header-bg: #161a1e;
+      --border-color: #24292f;
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-green: #10b981;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --mono-font: "JetBrains Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      height: 52px;
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .brand-title { color: #fff; font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .brand-title span { color: var(--accent-cyan); font-weight: 400; }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: var(--mono-font);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge-gpu { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .badge-alert-normal { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
+    .badge-alert-advisory { background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid #3b82f6; }
+    .badge-alert-warning { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; }
+    .badge-alert-critical { background: rgba(239, 68, 68, 0.3); color: #ef4444; border: 1px solid #ef4444; animation: pulseRed 1s infinite alternate; }
+
+    @keyframes pulseRed {
+      0% { box-shadow: 0 0 4px rgba(239, 68, 68, 0.4); }
+      100% { box-shadow: 0 0 16px rgba(239, 68, 68, 0.9); }
+    }
+
+    .scenario-select {
+      background: #1f2429;
+      color: #e5e7eb;
+      border: 1px solid #374151;
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+    }
+    .scenario-select:focus { border-color: var(--accent-blue); }
+
+    /* Main Workspace Split */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 210px;
+      gap: 2px;
+      background: var(--border-color);
+      min-height: 0;
+    }
+
+    .panel {
+      background: var(--panel-bg);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      height: 34px;
+      background: #15181c;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-family: var(--mono-font);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border-color);
+      user-select: none;
+    }
+
+    /* Video Player & Canvas Overlays */
+    #video-wrapper {
+      flex: 1;
+      position: relative;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #vision-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Video Control Bar */
+    .video-controls {
+      height: 38px;
+      background: #14171a;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 12px;
+      font-size: 12px;
+      font-family: var(--mono-font);
+    }
+
+    .ctrl-btn {
+      background: #22272e;
+      border: 1px solid #374151;
+      color: #e5e7eb;
+      border-radius: 4px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+    .ctrl-btn:hover { background: #2d333b; }
+    .ctrl-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+
+    .scrubber {
+      flex: 1;
+      height: 6px;
+      background: #282e35;
+      border-radius: 3px;
+      cursor: pointer;
+      position: relative;
+    }
+    .scrubber-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent-cyan);
+      border-radius: 3px;
+      transition: width 0.05s linear;
+    }
+
+    /* 3D WebGL Digital Twin */
+    #webgl-wrapper {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      position: relative;
+      cursor: grab;
+    }
+    #webgl-wrapper:active { cursor: grabbing; }
+
+    .twin-overlay-info {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(17, 20, 23, 0.85);
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: var(--mono-font);
+      font-size: 11px;
+      color: #9ca3af;
+      pointer-events: none;
+      backdrop-filter: blur(4px);
+    }
+
+    /* Bottom Analytics & Validation Panel */
+    #bottom-panel {
+      grid-column: 1 / -1;
+      background: #101215;
+      display: grid;
+      grid-template-columns: 320px 1fr 280px;
+      gap: 16px;
+      padding: 14px 20px;
+      align-items: center;
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* Telemetry Counters */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .metric-card {
+      background: #171b1f;
+      border: 1px solid #282f37;
+      border-radius: 6px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .metric-title { font-size: 10px; font-family: var(--mono-font); color: var(--text-muted); text-transform: uppercase; }
+    .metric-val { font-size: 18px; font-weight: 800; font-family: var(--mono-font); color: #fff; }
+
+    /* Technique Validation Matrix */
+    .validation-matrix {
+      background: #14171b;
+      border: 1px solid #282f37;
+      border-radius: 6px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .matrix-title {
+      font-size: 11px;
+      font-family: var(--mono-font);
+      color: var(--accent-cyan);
+      font-weight: 700;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+    }
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      font-family: var(--mono-font);
+    }
+    .matrix-table th {
+      color: var(--text-muted);
+      text-align: left;
+      padding: 3px 6px;
+      border-bottom: 1px solid #282f37;
+      font-weight: 600;
+    }
+    .matrix-table td {
+      padding: 3px 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .row-highlight {
+      background: rgba(59, 130, 246, 0.12);
+      color: #93c5fd;
+      font-weight: 700;
+    }
+
+    /* Adjudication Controls */
+    .action-triage {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .action-title { font-size: 10px; font-family: var(--mono-font); color: var(--text-muted); text-transform: uppercase; }
+    .action-buttons { display: flex; flex-direction: column; gap: 6px; }
+    .btn-act {
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid transparent;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: filter 0.15s;
+    }
+    .btn-act:hover { filter: brightness(1.15); }
+    .btn-tp { background: #b91c1c; color: #fff; }
+    .btn-fp { background: #374151; color: #d1d5db; border-color: #4b5563; }
+    .btn-cw { background: #047857; color: #fff; }
+    .kbd {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-family: var(--mono-font);
+    }
+
+    /* AI Safety Supervisor Modal */
+    .agent-modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .agent-modal {
+      width: 820px;
+      max-width: 95vw;
+      height: 660px;
+      max-height: 90vh;
+      background: #111417;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 25px rgba(59,130,246,0.25);
+      overflow: hidden;
+    }
+    .agent-modal-header {
+      padding: 12px 18px;
+      background: #161a1e;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .agent-modal-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .agent-quick-actions {
+      padding: 8px 16px;
+      background: #0d1013;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .quick-chip {
+      padding: 4px 10px;
+      background: #1e242b;
+      border: 1px solid #374151;
+      border-radius: 14px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #93c5fd;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .quick-chip:hover {
+      background: #2563eb;
+      color: #fff;
+      border-color: #3b82f6;
+    }
+    .agent-chat-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .chat-msg {
+      max-width: 90%;
+      padding: 10px 14px;
+      border-radius: 6px;
+      word-break: break-word;
+    }
+    .chat-msg-user {
+      align-self: flex-end;
+      background: #1e3a8a;
+      color: #eff6ff;
+      border: 1px solid #2563eb;
+    }
+    .chat-msg-agent {
+      align-self: flex-start;
+      background: #181d22;
+      color: #e5e7eb;
+      border: 1px solid #2a313a;
+    }
+    .chat-msg-agent h3 {
+      font-size: 12px;
+      color: #60a5fa;
+      margin-bottom: 6px;
+    }
+    .chat-msg-agent ul, .chat-msg-agent ol {
+      margin-left: 18px;
+      margin-top: 4px;
+    }
+    .tool-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      margin-bottom: 6px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      border-radius: 3px;
+      font-size: 10px;
+      font-family: var(--mono-font);
+      font-weight: 700;
+    }
+    .agent-modal-footer {
+      padding: 12px 16px;
+      background: #161a1e;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 10px;
+    }
+    .agent-input {
+      flex: 1;
+      background: #0f1317;
+      border: 1px solid #374151;
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #fff;
+      outline: none;
+    }
+    .agent-input:focus { border-color: var(--accent-blue); }
+    .agent-send-btn {
+      padding: 8px 16px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .agent-send-btn:hover { background: #1d4ed8; }
+  </style>
+  <script src="/assets/three.r128.min.js"></script>
+<script defer src="/assets/demo.js"></script></head>
+<body>
+
+  <!-- Top Header Bar -->
+  <header>
+    <div class="header-left">
+      <div class="brand-title">
+        SENTINELZONE-AI <span>// Predictive Dynamic Spatial Safety</span>
+      </div>
+      <div class="badge badge-gpu">⚡ CUDA RTX 4070 (8GB)</div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <label for="scenario-dropdown" style="font-size: 11px; color: var(--text-muted); font-family: var(--mono-font);">ACTIVE SCENARIO:</label>
+      <select id="scenario-dropdown" class="scenario-select" data-demo-action="0">
+        <option value="scenario_worker_in_excavator_blind_spot" selected>★ Excavator Blind Spot: Worker in Hazard Zone</option>
+        <option value="scenario_exca_near_miss">★ Excavator Near-Miss: Worker Near Heavy Equipment (exca9)</option>
+        <option value="scenario_worker_and_excavator_near_barrier">★ Controlled Co-Working: Worker & Excavator Near Barrier</option>
+        <option value="scenario_user_field">Field Video 1: 15100676 (Active Site)</option>
+        <option value="scenario_user_crew">Field Video 2: 10810477 (HD Site Crew)</option>
+        <option value="scenario_user_workforce">Field Video 3: 14117669 (4K Dense Workforce)</option>
+        <option value="scenario_1_real_site">Scenario 1: Actual Construction Site Footage (Active Haul Road)</option>
+      </select>
+      <button class="ctrl-btn" style="padding: 4px 8px; font-size: 11px;" title="Scan folder for newly dropped videos" data-demo-action="1">⟳ Rescan</button>
+      <button class="ctrl-btn" style="padding: 4px 10px; font-size: 11px; background: rgba(59, 130, 246, 0.2); border-color: #3b82f6; color: #60a5fa;" data-demo-action="2">🤖 AI Safety Supervisor</button>
+      <div id="system-alert-badge" class="badge badge-alert-normal">NORMAL (SAFE)</div>
+    </div>
+  </header>
+
+  <!-- Main Workspaces -->
+  <main>
+    <!-- Left Panel: Real Video / Dataset Frame Canvas -->
+    <div class="panel">
+      <div class="panel-header">
+        <span id="cam-title-tag">Actual Construction Site Footage (Unseen Held-Out Data)</span>
+        <span id="cam-telemetry-tag" style="color: #34d399;">RAW FOOTAGE [1280x720 @ 20 FPS]</span>
+      </div>
+      <div id="video-wrapper">
+        <canvas id="vision-canvas"></canvas>
+      </div>
+      <!-- Video Controls Bar -->
+      <div class="video-controls">
+        <button id="btn-play" class="ctrl-btn" data-demo-action="3">Play</button>
+        <button class="ctrl-btn" data-demo-action="4">◄ Step</button>
+        <button class="ctrl-btn" data-demo-action="5">Step ►</button>
+        <div class="scrubber" data-demo-action="6">
+          <div id="scrubber-fill" class="scrubber-fill"></div>
+        </div>
+        <span id="frame-counter" style="color: #9ca3af;">1 / 120</span>
+        <div style="display:flex; gap:4px;">
+          <button class="ctrl-btn" data-demo-action="7">0.5x</button>
+          <button class="ctrl-btn active" id="spd-1x" data-demo-action="8">1.0x</button>
+          <button class="ctrl-btn" data-demo-action="9">2.0x</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel: Three.js Metric Ground Plane Digital Twin -->
+    <div class="panel">
+      <div class="panel-header">
+        <span>Metric Ground Plane Twin (EPSG:3857 Geodetic Datum)</span>
+        <span style="color: #60a5fa;">DEMO CONSTANT-VELOCITY FORECAST</span>
+      </div>
+      <div id="webgl-wrapper"></div>
+      <div class="twin-overlay-info">
+        <div>ORBIT: Left Click + Drag</div>
+        <div>ZOOM: Mouse Wheel</div>
+        <div style="margin-top: 4px; color: #60a5fa;">■ BLUE: Worker Tracks</div>
+        <div style="color: #f59e0b;">■ AMBER: Heavy Machinery</div>
+        <div style="color: #ef4444;">■ RED: BIM Trench Hazard</div>
+      </div>
+    </div>
+
+    <!-- Bottom Panel: Quantitative Validation & Human Adjudication -->
+    <div id="bottom-panel">
+      <!-- Live Operational Metrics -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-title">Min Time-To-Collision</span>
+          <span class="metric-val" id="metric-ttc" style="color: #10b981;">&gt; 5.0 s</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-title">Collision Probability</span>
+          <span class="metric-val" id="metric-pcol" style="color: #10b981;">0.0 %</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-title">Warning Lead Time</span>
+          <span class="metric-val" id="metric-wlt" style="color: #3b82f6;">Not measured</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-title">Hardware GPU Latency</span>
+          <span class="metric-val" id="metric-latency" style="color: #34d399;">Not measured</span>
+        </div>
+      </div>
+
+      <!-- Technique Validation Matrix -->
+      <div class="validation-matrix">
+        <div class="matrix-title">
+          <span>Comparative Technique Validation</span>
+          <span style="color: #9ca3af; font-weight: 400;">Current Frame Analysis</span>
+        </div>
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>Technique</th>
+              <th>Status</th>
+              <th>Lead Time</th>
+              <th>False Alarm Rate</th>
+              <th>Validation Verdict</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Radial 3m Static</td>
+              <td id="val-r3-status">SAFE</td>
+              <td>1.1 s</td>
+              <td>Not measured</td>
+              <td id="val-r3-verdict" style="color: #9ca3af;">Delayed intervention</td>
+            </tr>
+            <tr>
+              <td>Radial 5m Static</td>
+              <td id="val-r5-status">SAFE</td>
+              <td>1.8 s</td>
+              <td>Not measured</td>
+              <td id="val-r5-verdict" style="color: #9ca3af;">Over-triggers on co-work</td>
+            </tr>
+            <tr>
+              <td>CVKM Linear</td>
+              <td id="val-cvkm-status">SAFE</td>
+              <td>4.4 s</td>
+              <td>Not measured</td>
+              <td id="val-cvkm-verdict" style="color: #9ca3af;">Overshoots trajectory curves</td>
+            </tr>
+            <tr class="row-highlight">
+              <td>SentinelZone deterministic forecast</td>
+              <td id="val-stgnn-status">SAFE</td>
+              <td style="color: #34d399;">Not measured</td>
+              <td style="color: #34d399;">Not measured</td>
+              <td id="val-stgnn-verdict" style="color: #34d399;">Demo only</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Human-in-the-Loop Adjudication -->
+      <div class="action-triage">
+        <span class="action-title">Human Adjudication / Active Learning</span>
+        <div class="action-buttons">
+          <button class="btn-act btn-tp" data-demo-action="10">
+            <span>True Near-Miss</span> <span class="kbd">T</span>
+          </button>
+          <button class="btn-act btn-fp" data-demo-action="11">
+            <span>False Alarm</span> <span class="kbd">F</span>
+          </button>
+          <button class="btn-act btn-cw" data-demo-action="12">
+            <span>Controlled Co-Work</span> <span class="kbd">C</span>
+          </button>
+          <button class="btn-act" style="background: #2563eb; color: #fff; margin-top: 4px;" data-demo-action="13">
+            <span>🤖 Agentic AI Triage</span> <span class="kbd">A</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+
+
+  <!-- Autonomous AI Safety Supervisor Modal -->
+  <div id="agent-modal-backdrop" class="agent-modal-backdrop" data-demo-action="14">
+    <div class="agent-modal" data-demo-action="15">
+      <div class="agent-modal-header">
+        <div class="agent-modal-title">
+          <span>🤖 Autonomous Site Safety Supervisor</span>
+          <span class="badge" style="background: rgba(59,130,246,0.2); color: #60a5fa; border: 1px solid #3b82f6; font-size: 10px;">LangGraph ReAct Multi-Tool Agent</span>
+        </div>
+        <button class="ctrl-btn" style="padding: 2px 8px; font-size: 12px;" data-demo-action="16">✕</button>
+      </div>
+
+      <!-- Quick Action Chips -->
+      <div class="agent-quick-actions">
+        <div class="quick-chip" data-demo-action="17">📋 Compile Shift PTW (Pier B4)</div>
+        <div class="quick-chip" data-demo-action="18">🔍 Live EKF Telemetry</div>
+        <div class="quick-chip" data-demo-action="19">⚖️ Multimodal Incident Triage</div>
+        <div class="quick-chip" data-demo-action="20">📢 OSHA Toolbox Briefing</div>
+        <div class="quick-chip" data-demo-action="21">📈 Active Learning Queue</div>
+      </div>
+
+      <!-- Scrollable Chat Body -->
+      <div id="agent-chat-body" class="agent-chat-body">
+        <div class="chat-msg chat-msg-agent">
+          <h3>🤖 Sentinel Safety Supervisor Online</h3>
+          <p>Autonomous agent initialized on edge GPU. I continuously monitor multi-agent kinematics, dynamic exclusion envelopes, and incident telemetry.</p>
+          <p style="margin-top: 6px; color: var(--text-muted);">Select a quick action above or enter natural language commands below.</p>
+        </div>
+      </div>
+
+      <!-- Chat Input Area -->
+      <div class="agent-modal-footer">
+        <input type="text" id="agent-input-field" class="agent-input" placeholder="Ask Supervisor (e.g. 'Compile permit for Pier B4', 'Adjudicate excavator near-miss', 'Generate OSHA talk')..." onkeydown="if(event.key==='Enter') sendAgentMessage()">
+        <button class="agent-send-btn" data-demo-action="22">Send</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

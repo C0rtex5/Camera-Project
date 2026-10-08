@@ -1,0 +1,1 @@
+"""Offline industrial camera hub."""

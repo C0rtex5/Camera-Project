@@ -1,0 +1,35 @@
+services:
+  hub:
+    image: sentinelzone-hub:cpu
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${SENTINEL_BIND_ADDRESS:-127.0.0.1}:8000:8000"
+    environment:
+      SENTINEL_DEVICE: auto
+      SENTINEL_AUTH_REQUIRED: "${SENTINEL_AUTH_REQUIRED:-false}"
+      SENTINEL_DATA_DIR: /var/lib/sentinel
+      SENTINEL_COOKIE_SECURE: "${SENTINEL_COOKIE_SECURE:-false}"
+      SENTINEL_ORIGIN: "${SENTINEL_ORIGIN:-http://localhost:8000}"
+      SENTINEL_RETENTION_DAYS: "${SENTINEL_RETENTION_DAYS:-7}"
+      SENTINEL_EVIDENCE_MAX_BYTES: "${SENTINEL_EVIDENCE_MAX_BYTES:-2147483648}"
+      SENTINEL_ENABLE_DEMO: "${SENTINEL_ENABLE_DEMO:-false}"
+    volumes:
+      - hub-data:/var/lib/sentinel
+      - ./deploy/secrets:/run/secrets:ro
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=256m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 45s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  hub-data:
