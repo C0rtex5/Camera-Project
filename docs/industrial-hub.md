@@ -4,29 +4,21 @@ The supported entrypoint is `src.api.app:app`. Run exactly one application worke
 
 ## Start on a Linux PC/server
 
-Install Docker Engine and Compose. For NVIDIA acceleration, also install a compatible driver and NVIDIA Container Toolkit and configure Docker GPU access. Build-time package downloads require internet; runtime does not. Only the launcher performs GPU availability checks; a container with required GPU reservations can fail before application CPU fallback has a chance to run.
-
-```bash
-bash scripts/start-hub.sh auto
-# Force a CPU deployment:
-bash scripts/start-hub.sh cpu
-```
-
-Open http://localhost:8000 and sign in. Add local operator/viewer accounts with the same command and `--role operator` or `--role viewer`. Passwords must contain at least 12 characters. Replacing an account invalidates its existing sessions. Login sessions expire after eight hours. No cloud AI keys are necessary.
+Use [the VPN deployment guide](../deploy/DOCKER_VPN.md) for environment configuration, port 1221, launcher, backup and rollback. The panel opens without login. The project/service/container identity is `sentinelzone` / `sentinel` / `sentinelzone`; persistent data uses `camera-project-hub-data`. The old volume is preserved without migration. Build-time downloads need internet, runtime does not.
 
 The bundled `yolov8n.pt` is a general COCO detector: it detects people and common vehicles, but **does not provide specialized machinery or PPE detection**. PPE is reported as unknown unless the selected model explicitly identifies positive/negative PPE classes. Use a site-validated construction model to enable those capabilities. Mount replacement weights read-only and set `SENTINEL_WEIGHTS` to their container path. Models are mapped using their class names. Missing/invalid weights disable inference; there are no automatic downloads or synthetic detections.
 
-The GPU image uses CUDA 12.4 PyTorch wheels; the CPU image uses CPU wheels. The default `auto` mode probes inference, falls back to CPU on initialization/inference failure, clears affected tracking state, and resumes with fresh frames. CPU mode may deliver a lower AI rate. `cuda` mode requires GPU inference and does not silently fall back. An administrator can retry GPU from the dashboard. Inference is serialized across cameras to bound accelerator memory while capture remains independent.
+The launcher detects the Docker daemon host and selects NVIDIA CUDA (including Blackwell/ARM64), AMD ROCm, Intel OpenVINO, or an independent CPU image. Real inference validates compatibility before startup. See [the current deployment guide](../deploy/DOCKER_VPN.md) for stacks, device permissions and selection settings. The default `auto` mode probes inference, falls back to CPU on initialization/inference failure, clears affected tracking state, and resumes with fresh frames. CPU mode may deliver a lower AI rate. `cuda` mode requires GPU inference and does not silently fall back. An administrator can retry GPU from the dashboard. Inference is serialized across cameras to bound accelerator memory while capture remains independent.
 
 ## Camera credentials and network
 
-Camera configuration accepts credential-free `rtsp://` or `rtsps://` URLs. Enter the camera username and password in the configuration dialog. They are stored separately from public configuration in the local SQLite database (owner-only file permissions) and survive restarts or container replacement. Leave both fields blank when editing to preserve existing credentials, or select removal to clear saved authentication. Replacement requires both fields. Camera responses return only a credentials-configured flag; credentials are excluded from configuration, audit records, validation errors, and logs. Database backups now include camera credentials and use owner-only permissions.
+Camera configuration accepts credential-free `rtsp://` or `rtsps://` URLs. Enter the camera username and password in the configuration dialog. They are stored separately from public configuration in the local SQLite database (owner-only file permissions) and survive restarts or container replacement. Leave both fields blank when editing to preserve existing credentials, or uncheck **Guardar Login** with blank credential fields to clear saved authentication. Replacement requires both fields. Camera responses return only a credentials-configured flag; credentials are excluded from configuration, audit records, validation errors, and logs. Database backups now include camera credentials and use owner-only permissions.
 
-For externally provisioned credentials, you can still use a JSON secret file in `deploy/secrets/`, for example a file named `camera_1` with `username` and `password` fields. Create it using a text editor, restrict access to the deployment owner/container user, and select its filename in camera configuration. The directory is mounted read-only at `/run/secrets`; secrets are excluded from Git and the build context. The API never returns the stored username or password. OpenCV/FFmpeg logs are suppressed to prevent backend URL disclosure.
+For externally provisioned credentials, you can still use a JSON secret file in `deploy/secrets/`, for example a file named `camera_1` with `username` and `password` fields. Create it using a text editor, restrict access to the deployment owner/container user, and select its filename in camera configuration. Mount that optional directory read-only at `/run/secrets`; secrets are excluded from Git and the build context. The API never returns the stored username or password. OpenCV/FFmpeg logs are suppressed to prevent backend URL disclosure.
 
 Ensure the host can reach the camera subnet. TCP transport is the default. Open/read timeouts are three seconds, reconnect delay backs off to 30 seconds, and frames older than two seconds are unavailable. RTSP decode timestamps are local receipt times; they are not proof of sensor-to-display latency. Use camera low-latency/substreams and measure source-side buffering separately.
 
-By default the hub binds to localhost. For other workstations, use a TLS reverse proxy on the industrial management network, set `SENTINEL_ORIGIN` to its exact HTTPS origin and `SENTINEL_COOKIE_SECURE=true`. Route HTTP and WebSocket traffic, disable proxy buffering on streams, and keep the underlying Docker port private. Do not configure the reverse proxy to trust arbitrary forwarded hosts. The default local panel opens without a username or password and grants local operator access to configuration, reviews, and zone approval. Mutations still require same-origin requests and `X-Sentinel-Request: hub`. Optional API session authentication is available with `SENTINEL_AUTH_REQUIRED=true`; provision accounts using `docker compose run --rm hub python -m scripts.hub_admin user admin`. In that explicit mode, monitoring routes and streams require a session. The normal panel is intended for direct local access.
+The panel listens on `0.0.0.0` (Docker port 1221 by default). `SENTINEL_ORIGIN=auto` accepts requests from the same origin as the panel, via localhost or the server IP; an explicit origin remains restrictive. The local panel grants configuration, review and zone approval access without login. Browser mutations require the same origin and `X-Sentinel-Request: hub`. Follow the VPN guide for port/firewall configuration. Optional application API authentication remains available to custom deployments; the supported Compose deployment deliberately disables it.
 
 ## Calibration, zones, and incidents
 
@@ -44,19 +36,9 @@ Warning/critical proximity and explicit noncompliant PPE generate incidents with
 
 ## Persistence and maintenance
 
-The `hub-data` named volume contains SQLite state and evidence. Container replacement preserves cameras, users, sessions, reviews, manifests, and audit history. Default evidence retention is seven days with a 2 GiB cap; the database and audit history are retained separately. Configure `SENTINEL_RETENTION_DAYS` and `SENTINEL_EVIDENCE_MAX_BYTES` for site policy. Leave space for the database and current evidence write; the cap is enforced after writing and during periodic cleanup. Disk failures surface as degraded readiness/storage errors. Liveness controls Docker health; individual camera failures do not trigger restart loops. Docker's restart policy restarts exited processes, not merely unhealthy containers.
+The `camera-project-hub-data` named volume contains SQLite state and evidence. Container replacement preserves cameras, users, sessions, reviews, manifests, and audit history. Default evidence retention is seven days with a 2 GiB cap; the database and audit history are retained separately. Configure `SENTINEL_RETENTION_DAYS` and `SENTINEL_EVIDENCE_MAX_BYTES` for site policy. Leave space for the database and current evidence write; the cap is enforced after writing and during periodic cleanup. Disk failures surface as degraded readiness/storage errors. Liveness controls Docker health; individual camera failures do not trigger restart loops. Docker's restart policy restarts exited processes, not merely unhealthy containers.
 
-Back up with the hub stopped to keep database references and evidence consistent. A backup must be outside the active data directory. Use a maintenance bind mount accessible by UID 10001:
-
-```bash
-docker compose stop hub
-docker compose run --rm -v "$PWD/backups:/backups" hub python -m scripts.hub_admin backup /backups/site-backup
-# Restore only into an empty replacement data volume; hub remains stopped:
-docker compose run --rm -v "$PWD/backups:/backups:ro" hub python -m scripts.hub_admin restore /backups/site-backup
-docker compose up -d
-```
-
-Back up camera secret files separately with restricted access. Test restoration into a fresh volume before relying on backups. Logs are rotated (three 10 MiB files). Graceful shutdown stops capture, inference, and evidence workers. Do not run multiple replicas against one camera registry. Retention applies to evidence; periodically assess SQLite/audit growth and archive according to site policy.
+Follow the stopped-service backup and empty-volume restore procedure in [DOCKER_VPN.md](../deploy/DOCKER_VPN.md). Camera credentials stored through the dashboard are included in SQLite backups; external secret files require a separate backup. Graceful shutdown stops capture, inference and evidence workers. Do not run multiple replicas against one camera registry. Monitor database/audit growth separately from evidence retention.
 
 The recorded-video demo is disabled by default. Set `SENTINEL_ENABLE_DEMO=true` and mount recorded videos read-only under `/opt/sentinel/data/test_videos` and/or `/opt/sentinel/data/real_videos`. Open `/demo/`. Recorded scenario REST routes retain their original paths and follow the selected access mode. Demo calibration is illustrative and must never be treated as a commissioned camera calibration. Three.js is bundled locally; there is no CDN dependency. Legacy graph functions stage drafts and require real BIM geometry; production workflows use the hub's database and human approval.
 
@@ -65,15 +47,11 @@ The recorded-video demo is disabled by default. Set `SENTINEL_ENABLE_DEMO=true` 
 Run tests with Python 3.11 or 3.12, CPU PyTorch, `requirements-hub.txt`, and pytest. Test a disconnected camera, a stale stream, loss of internet, model errors, invalid calibration, and storage exhaustion before site use. Run both CPU and GPU deployments on target hardware and record per-camera delivered AI fps and processing/end-to-end latency. Do not assume a 120 ms budget or CPU/GPU performance equivalence.
 
 ```bash
-python -m scripts.pilot_monitor --url http://localhost:8000 --hours 72 --output pilot-results.jsonl
+python -m scripts.pilot_monitor --url http://localhost:1221 --hours 72 --output pilot-results.jsonl
 ```
 
 The monitor samples readiness every 30 seconds and writes a local JSONL report. When optional API authentication is enabled, supply `--username admin`; only then is a password requested and expired sessions renewed. Include all four cameras, actual resolutions/codecs, and representative worker/equipment/PPE scenes. Verify camera reconnects, power/container restarts, backup restoration, operator workflows, and evidence retention. Evaluate missed detections and false alarms using independently labeled site footage. Validate day/night lighting, dust, occlusion, vibration, camera movement, and calibration references. Hardware benchmarking and the 72-hour pilot must be performed on the deployment machine; repository tests cannot establish site accuracy.
 
 ## Reproducible offline container check
 
-The smoke check exercises the real bundled detector and local APIs with networking disabled and a read-only image; the test state is temporary.
-
-```bash
-docker run --rm --network none --read-only --tmpfs /tmp:rw,nosuid,size=256m --tmpfs /var/lib/sentinel:uid=10001,gid=10001 -e OMP_NUM_THREADS=2 -i sentinelzone-hub:cpu python - < tests/docker_smoke.py
-```
+Build `camera-project:cpu`, then run `python3 scripts/docker_hub_smoke.py` on a Docker host. It verifies the real detector, no-login panel, assets, APIs, private RTSP credentials, evidence, recreation and backup/restore in disposable containers with networking disabled. Target GPU/RTSP commissioning is separate.

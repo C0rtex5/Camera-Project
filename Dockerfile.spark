@@ -1,4 +1,4 @@
-# NVIDIA's documented DGX Spark ARM64 / GB10 stack (Python 3.12, CUDA 13).
+# NVIDIA CUDA 13 stack for Blackwell (x86/ARM64 SBSA), including DGX Spark.
 FROM nvcr.io/nvidia/pytorch:25.09-py3
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 \
     SENTINEL_DATA_DIR=/var/lib/sentinel SENTINEL_WEIGHTS=/opt/sentinel/yolov8n.pt \
@@ -20,6 +20,7 @@ COPY --chown=sentinel:sentinel src ./src
 COPY --chown=sentinel:sentinel config ./config
 COPY --chown=sentinel:sentinel scripts ./scripts
 COPY --chown=sentinel:sentinel yolov8n.pt ./yolov8n.pt
+ENV CUDA_CACHE_PATH=/tmp/cuda-cache TRITON_CACHE_DIR=/tmp/triton-cache XDG_CACHE_HOME=/tmp/cache
 USER sentinel
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/live', timeout=3)"

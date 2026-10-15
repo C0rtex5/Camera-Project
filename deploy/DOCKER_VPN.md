@@ -12,7 +12,7 @@ git switch codex/docker-server-deploy
 cp .env.production.example .env.production
 ```
 
-Edite `.env.production`: `SENTINEL_BIND_ADDRESS` é o IP da interface VPN **do servidor**, nunca `0.0.0.0`. Exemplo: `100.80.0.10`; `SENTINEL_ORIGIN=http://100.80.0.10:1221`. A origem deve ser exatamente o endereço aberto no navegador, sem barra final. Para mudar a porta, ajuste `SENTINEL_PORT` e a origem. O endereço precisa existir no servidor antes do início. O padrão é localhost na porta 1221. Não coloque credenciais das câmeras neste arquivo.
+Edite `.env.production`: `SENTINEL_BIND_ADDRESS=0.0.0.0` faz o serviço escutar em todas as interfaces IPv4 do servidor. O padrão `SENTINEL_ORIGIN=auto` aceita pedidos da mesma origem pela qual o próprio painel foi aberto, tanto em `http://localhost:1221` como pelo IP real do servidor na VPN. O endereço `0.0.0.0` é apenas o host de escuta. Para mudar a porta, ajuste `SENTINEL_PORT`. Um endereço explícito em `SENTINEL_ORIGIN` restringe o acesso àquela origem (protocolo, endereço e porta), sem caminho ou barra final; pedidos de outras origens continuam bloqueados. Não coloque credenciais das câmeras neste arquivo.
 
 ```bash
 ./scripts/start-hub.sh auto
@@ -20,43 +20,56 @@ Edite `.env.production`: `SENTINEL_BIND_ADDRESS` é o IP da interface VPN **do s
 
 O launcher valida a configuração e espera o healthcheck. Não execute o Compose antigo simultaneamente: mantenha projeto `sentinelzone`, serviço `sentinel` e container `sentinelzone`. O novo volume `camera-project-hub-data` contém configuração, credenciais RTSP, incidentes, evidências, revisões e auditoria. O volume `sentinelzone-state` permanece intacto; esta versão não migra dados antigos. Nunca use `down -v` para atualizar.
 
-## CPU, GPU e acesso offline
+## GPU automática, CPU e acesso offline
 
-`./scripts/start-hub.sh cpu` força CPU. `auto` tenta NVIDIA se o driver estiver disponível; verifica inferência real do modelo em CUDA dentro do container e usa CPU se a inicialização GPU falhar. Falhas de construção são reportadas. `gpu` exige GPU e falha explicitamente se indisponível. A opção `SENTINEL_DEVICE` aceita `auto`, `cpu` ou `cuda`; em deploy CPU o launcher substitui por `cpu`. Após falha de inferência CUDA, a aplicação reinicia o modelo em CPU e mantém a captura. Retentar GPU requer ação do operador ou reinício.
+Use `./scripts/start-hub.sh auto` no servidor. O launcher consulta a arquitetura e os dispositivos **do host do Docker**, incluindo quando o cliente usa um daemon remoto. Ele prepara uma imagem CPU independente, lê o inventário PCI/render em um container temporário sem rede e escolhe uma imagem compatível. Não depende de `nvidia-smi` instalado no computador cliente.
 
-Para GPU, instale drivers compatíveis e NVIDIA Container Toolkit no host, configure o runtime Docker e valide acesso ao dispositivo. CPU não depende disso. A imagem CUDA x86 usa PyTorch 2.5.1/cu124; a imagem CPU x86 usa Python 3.12.15 e dependências fixadas. A Spark usa o stack ARM64/CUDA 13/PyTorch da imagem NVIDIA abaixo. O primeiro build exige internet; depois a execução usa o modelo Git local e ativos locais sem downloads. Prepare a imagem antecipadamente se o servidor não tiver internet (`docker save`/`docker load`).
+| Hardware compatível | Imagem selecionada | Requisito do host |
+|---|---|---|
+| NVIDIA Maxwell–Hopper x86, conforme suporte CUDA/PyTorch | `camera-project:gpu`, PyTorch 2.5.1/CUDA 12.4 | Driver compatível e NVIDIA Container Toolkit |
+| NVIDIA Blackwell x86 ou NVIDIA ARM64 SBSA, incluindo DGX Spark | `camera-project:spark`, NVIDIA PyTorch 25.09/CUDA 13 | Driver compatível e NVIDIA Container Toolkit |
+| AMD x86 suportada pelo ROCm 6.4 | `camera-project:rocm`, PyTorch 2.9.1/ROCm 6.4 | Driver amdgpu, `/dev/kfd` e render nodes disponíveis |
+| Intel x86 suportada pelo OpenVINO e pelo runtime OpenCL empacotado | `camera-project:openvino`, OpenVINO 2025.0 | Driver i915/xe e render nodes disponíveis |
+| Sem GPU compatível ou falha em modo automático | `camera-project:cpu` | Nenhum runtime GPU necessário |
 
-## DGX Spark / GB10
+São variantes da mesma aplicação, com o mesmo serviço, porta e volume. Uma imagem CPU já criada não ganha bibliotecas CUDA/ROCm/OpenVINO apenas ao mudar uma variável; execute o launcher para selecionar/recriar a variante correta. ARM64 sozinho não identifica uma Spark. Jetson não é ARM64 SBSA e exige uma imagem L4T própria; nesta entrega usa CPU quando possível.
 
-A Spark tem CPU ARM64 e GPU Blackwell. A imagem x86/cu124 anterior não atende esse hardware. O launcher consulta a arquitetura do Docker host e usa `Dockerfile.spark` / `compose.spark.yaml` em ARM64. A base fixa `nvcr.io/nvidia/pytorch:25.09-py3` fornece Python 3.12, CUDA 13 e PyTorch 2.9 NVIDIA com suporte à Spark. Torch, Torchvision e o stack numérico dessa base são preservados; os pacotes da aplicação ficam em um ambiente separado. Fonte: [NVIDIA PyTorch 25.09](https://docs.nvidia.com/deeplearning/frameworks/pytorch-release-notes/rel-25-09.html) e [hardware Spark](https://docs.nvidia.com/dgx/dgx-spark/hardware.html).
+NVIDIA é consultada dentro de um container com acesso GPU antes de construir a variante CUDA. O launcher testa a reserva NVIDIA tradicional e, se necessário, o CDI nativo (`nvidia.com/gpu=all`), usando apenas o caminho que realmente funcionar. CDI exige suporte/configuração do daemon e especificações de dispositivos válidas; ele é habilitado por padrão no Docker Engine 28.3 ou posterior. A capacidade de cálculo distingue Blackwell de gerações anteriores. AMD e Intel recebem apenas os render nodes do fabricante selecionado e seus grupos numéricos reais; AMD também recebe `/dev/kfd`. Não há execução privilegiada, montagem de diretórios de drivers do host nem alteração automática de drivers. A inferência inicial usa um container separado **sem o volume de dados**, evitando acesso às credenciais das câmeras.
 
-Atualize os arquivos da aplicação mantendo `.env.production` e o volume, então execute na Spark:
+O launcher só inicia uma variante GPU após inferência real do modelo nela. O runtime enumera dispositivos visíveis e tenta os candidatos em ordem, preferindo placa dedicada a gráficos integrados e, depois, maior memória disponível. Se um candidato falhar, tenta o próximo. Não há divisão de câmeras entre múltiplas GPUs nesta versão. Em máquinas com vários fabricantes, a prioridade do launcher é NVIDIA, AMD e Intel; é possível restringir a família abaixo.
 
-```bash
-./scripts/start-hub.sh gpu
+Configuração recomendada em `.env.production`:
+
+```dotenv
+SENTINEL_DEVICE=auto
+SENTINEL_ACCELERATOR=auto
+SENTINEL_GPU_INDEX=auto
+SENTINEL_ORIGIN=auto
 ```
 
-Esse modo exige GPU e reporta falha em vez de ocultar o problema. Após confirmar CUDA, use `auto` para permitir fallback. No ARM64, o fallback CPU usa a mesma imagem Spark sem reserva de GPU. Se iniciar diretamente pelo Compose, é necessário incluir os dois overrides:
+`SENTINEL_ACCELERATOR` também aceita `nvidia`, `rocm`, `openvino` ou `cpu`; `cuda` é um alias de NVIDIA no launcher. `SENTINEL_GPU_INDEX` pode ser um índice numérico dos dispositivos **visíveis ao runtime da imagem escolhida**. Para Intel, o índice corresponde a `GPU.N`. `SENTINEL_DEVICE` aceita `auto`, `cpu`, `gpu`, `cuda`, `rocm` ou `openvino`. No modo automático, uma configuração explícita CPU é respeitada; o launcher força CPU em fallback.
 
-```bash
-docker compose --env-file .env.production -f compose.yaml -f compose.gpu.yaml -f compose.spark.yaml up -d --build
-```
+`./scripts/start-hub.sh cpu` força CPU. `./scripts/start-hub.sh gpu` exige inferência GPU válida e reporta falha se ela não puder ser usada. `auto` reporta falhas de imagem, runtime, inferência ou startup e inicia a imagem CPU. O painel mostra fabricante/backend, nome do dispositivo e motivo de degradação. Uma falha GPU durante operação descarta o quadro, recarrega o modelo em CPU e reinicia os estados de tracking, mantendo captura e visualização. Retentar GPU requer o botão **Tentar GPU novamente**, reinício ou novo deploy; o botão só usa bibliotecas/dispositivos já disponíveis naquele container.
 
-O botão **Tentar GPU novamente** agora sai do modo CPU forçado e tenta inferência CUDA. Ele só consegue usar os dispositivos e bibliotecas já disponíveis no container; não troca a imagem nem instala CUDA. O painel informa quando está em uma imagem CPU ou quando o runtime NVIDIA não disponibilizou a GPU. Uma imagem CPU já em execução precisa ser substituída pelo deploy Spark.
+O build Intel converte o modelo local para OpenVINO, empacota pesos e metadados e registra seu hash de origem. A execução não faz conversão nem downloads. Um modelo `.pt` diferente precisa de exportação OpenVINO correspondente; não se usa silenciosamente o detector antigo. O processamento das caixas mantém a correção de resize e o mapeamento de classes por metadados. CPU, CUDA e ROCm usam o `.pt` local.
 
-A construção e inferência ARM64 reais precisam ser verificadas na Spark. Este computador x86 não valida execução GB10. O launcher verifica o modelo real antes de iniciar o serviço GPU.
+O primeiro build exige internet. Para operação offline, prepare as variantes necessárias antes (`docker save`/`docker load`). O inventário e os testes de startup não baixam pesos. Atualizações, backup e restauração continuam usando o mesmo volume; nunca use `down -v`. Para AMD/Intel, use o launcher: ele gera as permissões de dispositivos específicas daquele servidor. Um `docker compose up` apenas com o arquivo base seleciona CPU e não concede acesso GPU.
+
+A detecção de um fabricante não garante suporte a todo modelo já produzido: arquitetura, driver, kernel e bibliotecas precisam ser compatíveis. Hardware sem suporte falha na validação e usa CPU no modo automático, com diagnóstico visível. Fontes: [PyTorch — versões e wheels CUDA/ROCm](https://pytorch.org/get-started/previous-versions/), [NVIDIA PyTorch 25.09](https://docs.nvidia.com/deeplearning/frameworks/pytorch-release-notes/rel-25-09.html), [NVIDIA — CDI](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/cdi-support.html), [Docker — dispositivos CDI](https://docs.docker.com/reference/cli/docker/container/run/#device), [ROCm — dispositivos em Docker](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/docker.html), [OpenVINO — GPU Intel](https://docs.openvino.ai/2025/openvino-workflow/running-inference/inference-devices-and-modes/gpu-device.html).
 
 ## Primeiro uso
 
 Abra a origem configurada. Cadastre até quatro câmeras com endereço RTSP **sem usuário/senha na URL**, identidade/site, usuário, senha e **Guardar Login** marcado. Campos vazios preservam as credenciais existentes; desmarcar a opção com campos vazios remove-as. Senhas não são devolvidas pelas APIs. O SQLite tem permissão 0600 e precisa guardar as credenciais de forma recuperável para conectar às câmeras; proteja também o volume e backups.
 
-Use **Testar conexão e login** antes de salvar. O teste parte do servidor, usa as credenciais informadas ou já salvas e distingue login recusado, URL/canal inválido, indisponibilidade de rede/VPN e timeout. Uma resposta RTSP aceita não confirma a decodificação do vídeo: confirme o estado online. Erros de salvamento aparecem dentro da janela; se houver erro de origem, corrija `SENTINEL_ORIGIN` para o endereço exato aberto no navegador.
+Use **Testar conexão e login** antes de salvar. O teste parte do servidor, usa as credenciais informadas ou já salvas e distingue login recusado, URL/canal inválido, indisponibilidade de rede/VPN e timeout. Uma resposta RTSP aceita não confirma a decodificação do vídeo: confirme o estado online. Erros de salvamento aparecem dentro da janela; se houver erro de acesso ao painel, configure `SENTINEL_ORIGIN=auto` no servidor e recrie o container pelo launcher. Esse erro ocorre antes de consultar a câmera; não indica senha RTSP incorreta. Para restringir o painel a um endereço, mantenha uma origem explícita correspondente ao navegador.
 
-Confirme vídeo e idade do último frame, dispositivo, taxa de IA, incidentes e revisão. Sem câmera/calibração/modelo disponível, `/health/ready` retorna 503 com detalhes; `/health/live` continua 200 enquanto o serviço responde e é usado para liveness. A calibração precisa de referências levantadas no local; sem ela, estimativas métricas ficam indisponíveis. Faça piloto de 72 horas e validação RTSP no servidor com as câmeras reais.
+Salvar uma câmera indisponível preserva sua configuração e as credenciais marcadas em **Guardar Login**; o hub tenta reconectar automaticamente. Reiniciar a aplicação local ou recriar o container com o mesmo volume mantém os dados. O botão **Testar conexão e login** usa os dados informados sem salvá-los. Confirme vídeo e idade do último frame, dispositivo, taxa de IA, incidentes e revisão. Sem câmera/calibração/modelo disponível, `/health/ready` retorna 503 com detalhes; `/health/live` continua 200 enquanto o serviço responde e é usado para liveness. A calibração precisa de referências levantadas no local; sem ela, estimativas métricas ficam indisponíveis. Faça piloto de 72 horas e validação RTSP no servidor com as câmeras reais.
 
 Demo opcional: coloque gravações em `demo-library/` e use `docker compose --env-file .env.production -f compose.yaml -f compose.demo.yaml up -d`. Não há gravações obrigatórias na imagem principal. O demo antigo fica em `/demo/`.
 
 ## Atualização e rollback
+
+Na atualização de uma instalação existente, troque o valor fixo antigo de `SENTINEL_ORIGIN` por `auto` em `.env.production` para habilitar acesso por localhost e pelo IP do servidor. Valores explícitos continuam restritivos; a atualização não os sobrescreve. Não altere o volume persistente.
 
 Guarde o commit atual antes de atualizar:
 

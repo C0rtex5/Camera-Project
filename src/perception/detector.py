@@ -22,6 +22,9 @@ class ConstructionSafetyDetector:
             except ImportError:
                 device = 'cpu'
         self.device = device
+        if device == 'cpu':
+            import torch
+            torch.set_num_threads(max(1, min(8, int(os.getenv('OMP_NUM_THREADS', '2')))))
         target = Path(weights_path or os.getenv('SENTINEL_WEIGHTS', 'yolov8n.pt'))
         if not target.is_file():
             self.error = 'Model weights are missing; automatic downloads are disabled'
@@ -38,8 +41,12 @@ class ConstructionSafetyDetector:
         if frame is None or frame.size == 0:
             raise ValueError('Expected a nonempty BGR image')
         try:
+            import torch
+            # A torch.device preserves the selected index and does not rewrite
+            # CUDA_VISIBLE_DEVICES, which would break retries after CPU fallback.
+            device = torch.device(self.device)
             results = self.model.predict(source=frame, conf=self.conf_threshold,
-                                         iou=self.iou_threshold, device=self.device, verbose=False, max_det=100)
+                                         iou=self.iou_threshold, device=device, verbose=False, max_det=100)
             boxes = results[0].boxes
             if boxes is None or len(boxes) == 0:
                 return np.empty((0, 6), dtype=np.float32), []

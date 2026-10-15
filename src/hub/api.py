@@ -16,6 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 
 from src.hub.models import Camera, CameraConnection, Login, Review, ManifestDraft, IncidentPublish, SupervisorRequest
+from src.hub.origin import origin_allowed
 from src.hub.service import Hub
 from src.hub.store import Store
 
@@ -63,10 +64,8 @@ def create_app(store=None, hub=None, authentication_required=None):
         if request.method not in ('GET', 'HEAD', 'OPTIONS'):
             if request.headers.get('x-sentinel-request') != 'hub':
                 return JSONResponse({'detail': 'Missing same-origin request header'}, status_code=403)
-            origin = request.headers.get('origin')
-            allowed = os.getenv('SENTINEL_ORIGIN', str(request.base_url).rstrip('/'))
-            if origin and origin != allowed:
-                return JSONResponse({'detail': 'Origem não permitida. Ajuste SENTINEL_ORIGIN para o endereço e a porta usados para abrir este painel.'}, status_code=403)
+            if not origin_allowed(request):
+                return JSONResponse({'detail': 'Acesso ao painel bloqueado: endereço de acesso não permitido. Configure SENTINEL_ORIGIN=auto ou a origem exata do painel no servidor. Este erro não indica falha de login da câmera.'}, status_code=403)
             try:
                 if int(request.headers.get('content-length', '0')) > 1024 * 1024:
                     return JSONResponse({'detail': 'Request too large'}, status_code=413)
@@ -252,9 +251,7 @@ def create_app(store=None, hub=None, authentication_required=None):
     @app.websocket('/ws/cameras/{camera_id}')
     async def telemetry(ws: WebSocket, camera_id: str):
         token = ws.cookies.get('sentinel_session', '')
-        origin = ws.headers.get('origin')
-        allowed = os.getenv('SENTINEL_ORIGIN') or ('http' + ('s' if ws.url.scheme == 'wss' else '') + '://' + ws.headers.get('host', ''))
-        if not session_user(token) or (origin and origin != allowed):
+        if not session_user(token) or not origin_allowed(ws):
             await ws.close(code=1008)
             return
         worker = app.state.hub.workers.get(camera_id)
@@ -275,9 +272,7 @@ def create_app(store=None, hub=None, authentication_required=None):
     @app.websocket('/ws/incidents')
     async def incident_events(ws: WebSocket):
         token = ws.cookies.get('sentinel_session', '')
-        origin = ws.headers.get('origin')
-        allowed = os.getenv('SENTINEL_ORIGIN') or ('http' + ('s' if ws.url.scheme == 'wss' else '') + '://' + ws.headers.get('host', ''))
-        if not await run_in_threadpool(session_user, token) or (origin and origin != allowed):
+        if not await run_in_threadpool(session_user, token) or not origin_allowed(ws):
             await ws.close(code=1008)
             return
         seen = {r['event_id'] for r in await run_in_threadpool(app.state.store.incidents)}
@@ -299,9 +294,7 @@ def create_app(store=None, hub=None, authentication_required=None):
     @app.websocket('/ws/demo_stream/{scenario_id}')
     async def demo_events(ws: WebSocket, scenario_id: str):
         token = ws.cookies.get('sentinel_session', '')
-        origin = ws.headers.get('origin')
-        allowed = os.getenv('SENTINEL_ORIGIN') or ('http' + ('s' if ws.url.scheme == 'wss' else '') + '://' + ws.headers.get('host', ''))
-        if not await run_in_threadpool(session_user, token) or (origin and origin != allowed) or os.getenv('SENTINEL_ENABLE_DEMO', 'false').lower() != 'true':
+        if not await run_in_threadpool(session_user, token) or not origin_allowed(ws) or os.getenv('SENTINEL_ENABLE_DEMO', 'false').lower() != 'true':
             await ws.close(code=1008)
             return
         await ws.accept()

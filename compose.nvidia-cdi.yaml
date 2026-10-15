@@ -1,0 +1,13 @@
+# Native CDI alternative to the legacy NVIDIA GPU reservation/hook.
+services:
+  sentinel:
+    image: camera-project:gpu
+    environment:
+      SENTINEL_DEVICE: auto
+      SENTINEL_ACCELERATOR: nvidia
+      NVIDIA_VISIBLE_DEVICES: void
+    build:
+      args:
+        TORCH_INDEX: https://download.pytorch.org/whl/cu124
+    devices:
+      - nvidia.com/gpu=all

@@ -3,6 +3,7 @@ import hashlib
 import json
 import socketserver
 import threading
+import socket
 from contextlib import contextmanager
 from unittest.mock import patch
 from urllib.request import parse_http_list, parse_keqv_list
@@ -60,6 +61,16 @@ def test_digest_special_characters_and_invalid_login():
 def test_authenticated_wrong_path_is_not_reported_as_bad_password():
     with rtsp_camera(status=404) as url:
         assert check_rtsp(url,{'username':'camera-user','password':'test:camera@password'})['code']=='path_not_found'
+
+
+def test_disconnected_camera_is_not_reported_as_bad_login():
+    with socket.socket() as closed_port:
+        closed_port.bind(('127.0.0.1', 0))
+        port = closed_port.getsockname()[1]
+    result = check_rtsp(f'rtsp://127.0.0.1:{port}/stream', {'username': 'camera-user', 'password': 'private'})
+    assert result['code'] == 'network_unreachable'
+    assert not result['ok']
+    assert 'private' not in json.dumps(result)
 
 
 class TestRTSPAPI(HubAPITest):

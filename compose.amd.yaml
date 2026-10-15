@@ -1,0 +1,14 @@
+# The launcher adds only AMD render nodes and their actual host group IDs.
+services:
+  sentinel:
+    image: camera-project:rocm
+    environment:
+      SENTINEL_DEVICE: auto
+      SENTINEL_ACCELERATOR: rocm
+    build:
+      args:
+        TORCH_INDEX: https://download.pytorch.org/whl/rocm6.4
+        TORCH_VERSION: 2.9.1
+        TORCHVISION_VERSION: 0.24.1
+        SYMPY_VERSION: 1.13.3
+    shm_size: 512m

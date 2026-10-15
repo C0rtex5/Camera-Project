@@ -1,0 +1,10 @@
+# GPU access and numeric render-group permissions are supplied by the launcher.
+services:
+  sentinel:
+    image: camera-project:openvino
+    environment:
+      SENTINEL_DEVICE: auto
+      SENTINEL_ACCELERATOR: openvino
+    build:
+      args:
+        OPENVINO: "true"

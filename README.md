@@ -37,7 +37,7 @@ python -m venv .venv
 . .venv/bin/activate
 pip install torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements-hub.txt pytest==8.3.4
-python -m uvicorn src.api.app:app --host 127.0.0.1 --port 8000 --workers 1
+python -m uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --workers 1
 python -m pytest tests -q
 ```
 

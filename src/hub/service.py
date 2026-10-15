@@ -23,62 +23,93 @@ logger = logging.getLogger(__name__)
 
 
 class DeviceManager:
-    def __init__(self, mode='auto', factory=None, gpu_available=None):
-        if mode not in ('auto', 'cpu', 'cuda'):
-            raise ValueError('Device mode must be auto, cpu, or cuda')
-        if factory is None:
-            from src.perception.detector import ConstructionSafetyDetector
-            factory = lambda device: ConstructionSafetyDetector(device=device)
-        self.factory = factory
+    MODES = ('auto', 'cpu', 'gpu', 'cuda', 'rocm', 'openvino')
+
+    def __init__(self, mode='auto', factory=None, gpu_available=None, discover=None):
+        if mode not in self.MODES:
+            raise ValueError('Device mode must be auto, cpu, gpu, cuda, rocm, or openvino')
+        self.factory = factory or self._factory
         self.mode = mode
         self.lock = threading.Lock()
         self.model = None
         self.device = 'unavailable'
+        self.backend = 'unavailable'
+        self.device_name = None
         self.reason = None
         self.generation = 0
         self.gpu_diagnostic = None
-        self.gpu_available = gpu_available or self._gpu_available
+        self.gpu_available = gpu_available  # Legacy injection used by hardware-free tests.
+        self.discover = discover
+        self.available = []
+        self.failures = []
 
     @staticmethod
-    def _gpu_available():
-        try:
-            import torch
-            return torch.cuda.is_available()
-        except Exception:
-            return False
+    def _factory(device):
+        if device.startswith('openvino:'):
+            from src.perception.openvino_detector import OpenVINOSafetyDetector
+            return OpenVINOSafetyDetector(device)
+        from src.perception.detector import ConstructionSafetyDetector
+        return ConstructionSafetyDetector(device=device)
 
-    def _load(self, device):
+    def _candidates(self):
+        if self.gpu_available is not None:
+            return ([{'device': 'cuda:0', 'backend': 'cuda', 'name': 'GPU', 'dedicated': True,
+                      'memory_bytes': 0}] if self.gpu_available() else [])
+        from src.hub.compute import accelerators
+        return (self.discover or accelerators)()
+
+    def _load(self, device, metadata=None):
         model = self.factory(device)
         model.detect(np.zeros((320, 320, 3), np.uint8))
         self.model, self.device = model, device
+        self.backend = metadata['backend'] if metadata else 'cpu'
+        self.device_name = metadata['name'] if metadata else 'CPU'
         self.generation += 1
 
     def initialize(self):
         with self.lock:
             self.model = None
-            self.device = 'unavailable'
-            self.reason = None
-            self.gpu_diagnostic = None
+            self.device = self.backend = 'unavailable'
+            self.device_name = None
+            self.reason = self.gpu_diagnostic = None
+            self.failures = []
             self.generation += 1
             try:
-                if self.mode != 'cpu' and self.gpu_available():
-                    self._load('cuda:0')
-                    self.gpu_diagnostic = 'GPU ativa; inferência validada.'
-                    return
-                self.gpu_diagnostic = self._gpu_diagnostic()
-                if self.mode == 'cuda':
-                    self.reason = 'Requested GPU is unavailable'
-                    return
+                self.available = self._candidates()
             except Exception:
-                if self.mode == 'cuda':
-                    self.reason = 'GPU inference initialization failed'
-                    return
+                self.available = []
+            candidates = list(self.available)
+            requested_backend = self.mode if self.mode in ('cuda', 'rocm', 'openvino') else os.getenv('SENTINEL_ACCELERATOR', 'auto')
+            requested_backend = {'nvidia': 'cuda', 'intel': 'openvino', 'amd': 'rocm'}.get(requested_backend, requested_backend)
+            if requested_backend not in ('auto', 'cpu'):
+                candidates = [c for c in candidates if c['backend'] == requested_backend]
+            index = os.getenv('SENTINEL_GPU_INDEX', 'auto')
+            if index != 'auto':
+                candidates = [c for c in candidates if c['device'].rsplit(':', 1)[-1] in (index, 'GPU.' + index)]
+            if self.mode != 'cpu' and requested_backend != 'cpu':
+                for candidate in candidates:
+                    try:
+                        self._load(candidate['device'], candidate)
+                        self.gpu_diagnostic = 'GPU ativa; inferência validada: ' + candidate['name']
+                        return
+                    except Exception:
+                        self.failures.append({'device': candidate['device'], 'backend': candidate['backend'],
+                                              'reason': 'Model inference validation failed'})
+            self.gpu_diagnostic = ('GPU detectada, mas a inferência falhou. Verifique compatibilidade e acesso ao dispositivo.'
+                                   if self.failures else 'GPU indisponível neste container. Verifique a imagem, os drivers e os dispositivos liberados.')
+            if self.mode not in ('auto', 'cpu'):
+                self.reason = 'Requested GPU is unavailable or failed inference validation'
+                return
+            if self.mode == 'cpu' or requested_backend == 'cpu':
+                self.gpu_diagnostic = 'Processamento CPU selecionado na configuração.'
+                self.reason = os.getenv('SENTINEL_DEPLOYMENT_NOTICE') or None
+            elif self.failures:
                 self.reason = 'GPU initialization failed; CPU fallback active'
             try:
                 self._load('cpu')
             except Exception:
                 self.model = None
-                self.device = 'unavailable'
+                self.device = self.backend = 'unavailable'
                 self.reason = 'CPU model initialization failed; live viewing remains available'
 
     def detect(self, frame):
@@ -88,38 +119,36 @@ class DeviceManager:
             try:
                 return self.model.detect(frame)
             except Exception:
-                if self.mode == 'auto' and self.device.startswith('cuda'):
+                if self.backend not in ('cpu', 'unavailable'):
                     self.model = None
-                    self.device = 'unavailable'
+                    self.device = self.backend = 'unavailable'
+                    self.device_name = None
+                    self.generation += 1
+                    if self.mode != 'auto':
+                        self.reason = 'GPU inference failed; monitoring unavailable until an explicit retry'
+                        self.gpu_diagnostic = 'Falha da GPU; retente a GPU ou selecione o modo automático para fallback CPU.'
+                        raise RuntimeError('Inference unavailable') from None
                     self.reason = 'GPU inference failed; CPU fallback active'
+                    self.gpu_diagnostic = 'A GPU falhou durante a análise; o modelo foi recarregado na CPU.'
                     try:
                         self._load('cpu')
                     except Exception:
+                        self.device_name = None
                         self.reason = 'GPU failed and CPU initialization failed'
-                # Drop the failed frame. Each worker resets state on generation change.
                 raise RuntimeError('Inference failed; waiting for a fresh frame') from None
 
-    @staticmethod
-    def _gpu_diagnostic():
-        try:
-            import torch
-            if torch.version.cuda is None:
-                return 'Esta imagem contém PyTorch CPU. Na DGX Spark, reinicie usando a imagem Spark pelo launcher.'
-            if not torch.cuda.is_available():
-                return 'CUDA não está acessível. Verifique o runtime NVIDIA e os dispositivos liberados ao container.'
-            return 'GPU disponível; modo CPU selecionado na configuração.'
-        except Exception:
-            return 'Não foi possível verificar a disponibilidade de CUDA.'
-
     def retry_gpu(self):
-        # An explicit operator action revokes forced CPU and requests auto fallback.
         with self.lock:
             self.mode = 'auto'
         self.initialize()
 
     def status(self):
-        return {'device': self.device, 'mode': self.mode, 'degradation': self.reason,
-                'generation': self.generation, 'gpu_diagnostic': self.gpu_diagnostic}
+        accelerated = self.model is not None and self.backend not in ('cpu', 'unavailable')
+        label = f'{self.backend.upper()} · {self.device_name}' if accelerated else self.device.upper()
+        return {'device': self.device, 'mode': self.mode, 'backend': self.backend,
+                'accelerated': accelerated, 'device_name': self.device_name, 'label': label,
+                'available_accelerators': self.available, 'gpu_failures': self.failures,
+                'degradation': self.reason, 'generation': self.generation, 'gpu_diagnostic': self.gpu_diagnostic}
 
 
 class CameraWorker:
@@ -244,7 +273,8 @@ class CameraWorker:
                 result = self.analytics.process(detections, ppe, frame.shape[1], frame.shape[0], captured)
                 result.update(camera_id=self.camera.camera_id, site_id=self.camera.site_id,
                               frame_id=fid, capture_timestamp=captured, frame_width=frame.shape[1], frame_height=frame.shape[0],
-                              processing_device=self.hub.device.device, inference_ms=(time.perf_counter() - start) * 1000,
+                              processing_device=self.hub.device.device, processing_backend=self.hub.device.backend,
+                              accelerator_name=self.hub.device.device_name, inference_ms=(time.perf_counter() - start) * 1000,
                               end_to_end_ms=(time.time() - captured) * 1000, capability_status='model_backed_rules')
                 ok, encoded = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 75])
                 with self.lock:
@@ -278,6 +308,7 @@ class CameraWorker:
             return {'camera_id': self.camera.camera_id, 'name': self.camera.name, 'site_id': self.camera.site_id,
                     'connection': 'stale' if stale and self.connection == 'online' else self.connection,
                     'last_frame_age_seconds': age, 'frame_id': self.frame_id, 'processing_device': self.hub.device.device,
+                    'processing_backend': self.hub.device.backend, 'accelerator_name': self.hub.device.device_name,
                     'inference_error': self.inference_error, 'telemetry': telemetry,
                     'calibration_monitoring': 'survey_at_configuration; recheck_after_camera_movement',
                     'delivered_ai_fps': round(rate, 2),

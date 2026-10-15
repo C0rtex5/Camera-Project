@@ -2,6 +2,7 @@ services:
   sentinel:
     environment:
       SENTINEL_DEVICE: auto
+      SENTINEL_ACCELERATOR: nvidia
     image: camera-project:gpu
     build:
       args:
@@ -11,5 +12,5 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              count: 1
+              count: all
               capabilities: [gpu]
